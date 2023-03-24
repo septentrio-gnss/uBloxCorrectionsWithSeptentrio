@@ -76,18 +76,18 @@ However, the ultimate goal of the guide is to provide an example of integration 
 
 ## DIFFERENT OPERATING MODES
 
-The different operating modes vary depending on the SPARTN data source. As discussed in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/blob/master/README.md#point-perfect-library">PointPerfect Library</a> section, there are two possible sources of SPARTN data, either through an <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/blob/master/README.md#mqtt">MQTT</a> broker or through the beam of an LBand satellite that broadcasts this data.
+The different operating modes vary depending on the SPARTN data source. As discussed in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/README.md#point-perfect-library">PointPerfect Library</a> section, there are two possible sources of SPARTN data, either through an <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/README.md#mqtt">MQTT</a> broker or through the beam of an LBand satellite that broadcasts this data.
 
 Therefore, the **selection of the SPARTN data source conditions some elements of the system**, such as which topics to subscribe to for MQTT communication or whether a continuous Internet connection is required or not.
 
-Thus, from now on we will refer to two modes of operation, these are **LBand Mode** and **MQTT Mode**. The selection and configuration of these operating modes is done through the different execution parameters of the compiled code, as described in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/blob/master/user/README.md#list-of-parameters">parameter list section</a>.
+Thus, from now on we will refer to two modes of operation, these are **LBand Mode** and **MQTT Mode**. The selection and configuration of these operating modes is done through the different execution parameters of the compiled code, as described in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/user/README.md#list-of-parameters">parameter list section</a>.
 
 ## MAIN PARTS OF THE CODE
 
 <p align="center">
     <img src="doc_sources/gluecode_diagram.jpg" width="100%">
 
-First of all, the most important thing about the structure of the code and its flow is that it has an initialization part and another part that contains a loop in which it will be running indefinitely or for a certain time (the latter is done by a timer, more information in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/blob/master/user/README.md#list-of-parameters">parameter list section</a>).
+First of all, the most important thing about the structure of the code and its flow is that it has an initialization part and another part that contains a loop in which it will be running indefinitely or for a certain time (the latter is done by a timer, more information in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/user/README.md#list-of-parameters">parameter list section</a>).
   
 As the first part of the initialization, there is the **Check Program Options** part, which is responsible for collecting all the configuration of the parameters entered by the user, in order to **run the program based on these parameters**.
 
@@ -105,14 +105,14 @@ In resume, the main loop continuously repeats the following steps:
 
 - Once the library has access to the information from the two previous points, if the information is of sufficient quality, it will produce RTCM correction data and it will be sent to the receiver.
 
-In the following two sub-sectinos called <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/tree/master/dev#initialization-part">Initialization part</a> and <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/tree/master/dev#main-loop-part">Main loop part</a>, a more detailed description of the code is given. Its porpuse is to give a general overview of the code logic of each block of the program (<a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/blob/master/dev/doc_sources/gluecode_diagram.jpg">shown in this picture</a>) while mentioning which of the imported libraries are been used and why.
+In the following two sub-sectinos called <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev#initialization-part">Initialization part</a> and <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev#main-loop-part">Main loop part</a>, a more detailed description of the code is given. Its porpuse is to give a general overview of the code logic of each block of the program (<a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/dev/doc_sources/gluecode_diagram.jpg">shown in this picture</a>) while mentioning which of the imported libraries are been used and why.
 
 ### Initialization part
 
 <details>
 <summary>Check program Options</summary>
 
-In this part of the code, the options selected by the user are shown by means of the different flags that appear in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/tree/master/dev#list-of-parameters">parameter list</a>. This code block is also in charge of assigning the value of the options to a structure called **Program Options**, which will be used to execute the different blocks of the code in the correct way, adapting to the options specified by the user.
+In this part of the code, the options selected by the user are shown by means of the different flags that appear in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev#list-of-parameters">parameter list</a>. This code block is also in charge of assigning the value of the options to a structure called **Program Options**, which will be used to execute the different blocks of the code in the correct way, adapting to the options specified by the user.
   
 </details>
   
@@ -158,7 +158,7 @@ Each iteration of the main loop checks if there is a new Dynamic Key available f
 <details>
 <summary>Get NMEA / Ephemeris from GNSS Receiver</summary>
  
-As discussed in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio#point-perfect-library">PointPerfect Library section</a>, the library first needs Ephemeris and NMEA information from the receiver, so this part of the code takes care of receiving that information and sending it to the library.
+As discussed in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio#point-perfect-library">PointPerfect Library section</a>, the library first needs Ephemeris and NMEA information from the receiver, so this part of the code takes care of receiving that information and sending it to the library.
 
 </details>   
   
@@ -172,7 +172,7 @@ This part of the code is responsible for obtaining SPARTN corrections from the S
 <details>
 <summary>Send SPARTN data to Library</summary>
   
-As discussed in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio#point-perfect-library">PointPerfect Library section</a>, the library needs the corrections in SPARTN format to decode them and with this information, together with the Ephemeris and NMEA information from the receiver, it can compute the corrections in RTCM v3 format that will later be sent to the receiver.
+As discussed in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio#point-perfect-library">PointPerfect Library section</a>, the library needs the corrections in SPARTN format to decode them and with this information, together with the Ephemeris and NMEA information from the receiver, it can compute the corrections in RTCM v3 format that will later be sent to the receiver.
 
 This part of the program is responsible for obtaining the SPARTN information from the source specified by the user and sending it to the library. This source can be LBand obtained through the receiver's auxiliary serial port, or it can be obtained through an MQTT topic.
 
@@ -226,7 +226,7 @@ Additionally, PointPerfect LIbrary is also a dependency, but it is already in th
 To download the code, simply clone this repository, since the cluecode is located inside it, specifically in the folder called 'gluecode'. To clone the repository, enter the following command in the terminal:
   
 ```
-git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio.git
+git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio.git
 ```  
   
 ## LIST OF PARAMETERS
@@ -314,7 +314,7 @@ g++ -std=c++11 -o ../build/gluecode gluecode.cpp \
 
 ## CODE EXECUTION
 
-These are the basic command executions, without using all the available parameters, see this section to know more about the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/tree/master/dev#list-of-parameters">program's parameters</a>.
+These are the basic command executions, without using all the available parameters, see this section to know more about the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev#list-of-parameters">program's parameters</a>.
 
 Navigate to src folder and run:
 
@@ -336,11 +336,11 @@ RUN WITH LBAND - (With Basic options)
 
 To test the code, a script has been created to run the compiled binary code file called 'gluecode'.
 
-The purpose of the script is to run the executable several times to make the receiver work with corrections with different <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/blob/master/dev/README.md#list-of-parameters">program execution arguments</a> (configuration). The purpose of the test is to check the performance of the corrections in the receiver. The code is not designed to test the performance of the code itself, as <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/tree/master/dev#suggestions-and-improvements">there are some things that could be improved</a> because this code is a sample code to help users and developers to implement the Pointperfect library in their system based on this code.
+The purpose of the script is to run the executable several times to make the receiver work with corrections with different <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/dev/README.md#list-of-parameters">program execution arguments</a> (configuration). The purpose of the test is to check the performance of the corrections in the receiver. The code is not designed to test the performance of the code itself, as <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev#suggestions-and-improvements">there are some things that could be improved</a> because this code is a sample code to help users and developers to implement the Pointperfect library in their system based on this code.
 
 <div align="center">
 
-| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/tree/master/gluecode/testing#testing-septentrios-gluecode-for-working-with-ubloxs-pointperfect-correction-services-for-precise-positioning">Click here to navigate to Testing Septentrio's gluecode for working with uBlox's Pointperfect correction services for precise positioning guide</a> |
+| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/gluecode/testing#testing-septentrios-gluecode-for-working-with-ubloxs-pointperfect-correction-services-for-precise-positioning">Click here to navigate to Testing Septentrio's gluecode for working with uBlox's Pointperfect correction services for precise positioning guide</a> |
 |---|
    
 </div>
@@ -351,7 +351,7 @@ There are several thing that could be improved in the code for a better performa
   
 <div align="center">
 
-| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio#suggestions-for-improvements">Click here to navigate to Suggestions and Improvements section</a> |
+| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio#suggestions-for-improvements">Click here to navigate to Suggestions and Improvements section</a> |
 |---|
    
 </div>
