@@ -147,6 +147,8 @@ To download the code, simply clone this repository, since the cluecode is locate
 git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio.git
 ``` 
   
+For obtaining the PointPerfect library please consult uBlox. Then put it in the pp folder inside include directory and make sure that the path to it is correct.
+
 ## LIST OF PARAMETERS
 
 Below are several tables with all the information about the gluecode execution arguments. These are divided into 4 sections, each with a different theme.
