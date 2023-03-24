@@ -216,7 +216,7 @@ These parameters are used to configure the MQTT client. Normally only the client
     
 ## CODE COMPILATION
   
-For compiling the code, just navigate to the src folder and execute the folloginc command:
+For compiling the code, just navigate to the src folder and execute the following command:
 
 ```
 g++ -std=c++11 -o ../build/gluecode gluecode.cpp \
