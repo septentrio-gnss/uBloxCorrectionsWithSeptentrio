@@ -201,7 +201,7 @@ The integration of this service is done through what in Septentrio we have calle
 
 ### Glue Code
 
-This code 'Glue Code' is a code written in the C++ language that makes use of several libraries to integrate this service in the Raspberry Pi 4 + Mosaic-Go setup, which is mentioned in <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio#receiver-and-raspberry-pi-4-setup">this section</a>.
+This code 'Glue Code' is a code written in the C++ language that makes use of several libraries to integrate this service in the Raspberry Pi 4 + Mosaic-Go setup, which is mentioned in <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio#receiver-and-raspberry-pi-4-setup">this section</a>.
 
 One of these libraries is **PointPerfect Library**, and **uses its API** to make possible its correct functioning and compatibility in the system.
 
@@ -227,7 +227,7 @@ The user Implementation Guide has the aim of providing a high-level explanation 
    
 <div align="center">
 
-| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/tree/master/user">Click here to User Implementation Guide.</a> |
+| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/user">Click here to User Implementation Guide.</a> |
 |---|
    
 </div>   
@@ -238,7 +238,7 @@ The developer Implementation Guide has the aim of deepening the compilation of t
 
 <div align="center">
 
-| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentio/tree/master/dev">Click here to Developer Implementation Guide.</a> |
+| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev">Click here to Developer Implementation Guide.</a> |
 |---|
    
 </div> 
