@@ -1,0 +1,66 @@
+# Compiled Object files
+**/.DS_Store
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.bin
+
+
+
+
+**/cmake-build-debug
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/install_manifest.txt
+**/CMakeFiles/
+**/CTestTestfile.cmake
+**/Makefile
+**/*.cbp
+**/CMakeScripts
+**/compile_commands.json
+
+ssnppl_demonstrator/ssnppl_demonstrator
+
+
+## Local 
+
+.idea/*.xml
+
+build/**/*
+
+lib/*
+bin/*
+test/test_runner
+
+## Cert
+*.pem
+*.crt
+
+#PPL lib
+**/PPL/**
+!**/PPL/.gitkeep
