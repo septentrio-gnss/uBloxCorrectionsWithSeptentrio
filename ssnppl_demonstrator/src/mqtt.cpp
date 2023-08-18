@@ -39,7 +39,7 @@ void mqtt_on_connect(struct mosquitto *mqttClient, void *userdata, int result) {
         std::cout << "Connected to broker.\n\nSubscribing to topics ... \n" << std::endl;
 
         // Access the userdata object
-        struct UserData *user_data = (struct UserData *)userdata;
+        UserData *user_data = (UserData *)userdata;
 
         // Dynamic Key Topic and QoS = 1
         result = mosquitto_subscribe(mqttClient, NULL, user_data->keyTopic.c_str(), user_data->keyQoS);
@@ -84,7 +84,7 @@ void mqtt_on_connect(struct mosquitto *mqttClient, void *userdata, int result) {
 
 void mqtt_on_message(struct mosquitto *mqttClient, void *userdata, const struct mosquitto_message *message) {
     // Access the userdata object
-    struct UserData *user_data = (struct UserData *)userdata;
+    UserData *user_data = (UserData *)userdata;
 
 
     struct mqttMessgae toPush;
@@ -95,7 +95,7 @@ void mqtt_on_message(struct mosquitto *mqttClient, void *userdata, const struct 
     user_data->message_queue_mutex.lock();
     user_data->message_queue.push(toPush);
     user_data->message_queue_mutex.unlock();    
-
+    user_data->cv_incoming_data->notify_all();
 
     }
 

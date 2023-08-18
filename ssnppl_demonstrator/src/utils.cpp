@@ -1,7 +1,6 @@
 // ****************************************************************************
 //
 // Copyright (c) 2023, Septentrio
-// Copyright (c) 2013-2022 Niels Lohmann
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -30,57 +29,72 @@
 //
 // ****************************************************************************
 
-#ifndef __MQTT__
-#define __MQTT__
-// General Standard Libraries 
-#include <string>
-#include <cstring>
+
+
+#include <vector>
 #include <iostream>
-// JSON sudo apt install nlohmann-json3-dev (DEBIAN 11)
-#include <nlohmann/json.hpp>
+#include <string>
+#include <cstdint>
+#include <cstring>
+#include <sstream>
 
-// MQTT sudo apt-get install libmosquitto-dev (DEBIAN 11)
-#include <mosquitto.h> 
-#include <queue>
-#include <mutex>
-#include <condition_variable>
+void echo(const std::string &msg, bool echo_mode)
+{
+  if (echo_mode == true)
+    std::cout << msg;
+}
+
+std::vector<std::string> split(const std::string &str, char separator)
+{
+  std::vector<std::string> result;
+  std::stringstream ss(str);
+  std::string item;
+  while (std::getline(ss, item, separator))
+  {
+    result.push_back(item);
+  }
+  return result;
+}
+
+bool is_empty(const uint8_t *arr, std::size_t size)
+{
+  uint8_t *zeros = new uint8_t[size](); // Allocate an array of size 'size' filled with zeros.
+  int result = memcmp(arr, zeros, size);
+  delete[] zeros;
+  return result == 0;
+}
+
+unsigned int getbitu(const unsigned char *buff, int pos, int len)
+{
+  unsigned int bits = 0;
+  int i;
+  for (i = pos; i < pos + len; i++)
+    bits = (bits << 1) + ((buff[i / 8] >> (7 - i % 8)) & 1u);
+  return bits;
+}
 
 
-struct mqttMessgae {
-    std::string topic;
-    std::string payload;
-    int payloadlen;
-};
+std::vector<int> identifyRTCM3MessageIDs(const uint8_t *buffer, size_t bufferSize)
+{
+  size_t index = 0;
+  std::vector<int> res;
+  while (index < bufferSize)
+  {
+    if (bufferSize - index < 3)
+    {
+      std::cerr << "Invalid buffer size. Remaining bytes are not enough for an RTCM3 message." << std::endl;
+      break;
+    }
 
-typedef struct {
+    uint16_t id = getbitu(buffer + index, 24, 12);
 
-    // Program Logic Mode
-    std::string corrections_mode;
-    std::string region;
+    res.push_back(id);
 
-    // Dynamic Key MQTT Info
-    const std::string keyTopic = "/pp/key/Lb"; //"/pp/key/Lb";
-    const int keyQoS = 1;
+    // Calculate the length of the current RTCM3 message
+    uint16_t length = getbitu(buffer + index, 14, 10);
 
-    // Frequency MQTT Info
-    const std::string freqTopic = "/pp/frequencies/Lb";
-    const int freqQoS = 1;
+    index += length + 6;
+  }
+  return res;
+}
 
-    // SPARTN MQTT Info
-    const std::string corrTopic = "/pp/Lb/eu";
-    const int corrQoS = 0;
-
-    //PPL
-    std::queue<struct mqttMessgae> message_queue;
-    std::mutex message_queue_mutex;
-
-    //CV incoming data
-    std::condition_variable_any *cv_incoming_data;
-
-}UserData;
-
-void mqtt_on_connect(struct mosquitto *mqttClient, void *userdata, int result);
-
-void mqtt_on_message(struct mosquitto *mqttClient, void *userdata, const struct mosquitto_message *message);
-
-#endif

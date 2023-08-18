@@ -39,6 +39,7 @@
 #include <queue>
 #include "PPL_PublicInterface.h" // PointPerfect Library
 #include <vector>
+#include <condition_variable>
 #include <atomic>
 
 enum ssnppl_error
@@ -91,13 +92,17 @@ private:
     std::thread write_rtcm_thread;
     std::queue<std::vector<uint8_t>> rtcm_queue;
     std::mutex rtcm_queue_mutex;
+    std::condition_variable cv_rtcm;
+
+    std::condition_variable_any cv_incoming_data;
+    std::mutex lk_incoming_data;
 
     ssnppl_error init_main_comm();
     ssnppl_error init_lband_comm();
 
     // MQTT
     struct mosquitto *mosq_client;
-    struct UserData UserData;
+    UserData userData;
     ssnppl_error init_mqtt();
 
     // SPARTN LOG

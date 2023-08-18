@@ -42,17 +42,17 @@ ssnppl_error Ssnppl_demonstrator::init(int argc, char *argv[])
     {
         return ssnppl_error::FAIL;
     }
-    
+
     if (init_main_comm() != ssnppl_error::SUCCESS)
     {
         return ssnppl_error::FAIL;
     }
-    
+
     if (init_lband_comm() != ssnppl_error::SUCCESS)
     {
         return ssnppl_error::FAIL;
     }
-    
+
     if (init_ppl() != ssnppl_error::SUCCESS)
     {
         return ssnppl_error::FAIL;
@@ -106,8 +106,7 @@ ssnppl_error Ssnppl_demonstrator::init_main_comm()
     else if (options.main_comm != "IP")
     {
         // error
-        std::cout << "Please insert a correct main channel type: USB or IP." << std::endl
-                  << std::endl;
+        std::cout << "Please insert a correct main channel type: USB or IP." << std::endl;
         return ssnppl_error::FAIL;
     }
 
@@ -176,15 +175,16 @@ ssnppl_error Ssnppl_demonstrator::init_mqtt()
     }
 
     // Set the program logic mode
-    UserData.corrections_mode = options.mode;
-    UserData.region = options.region;
+    userData.corrections_mode = options.mode;
+    userData.region = options.region;
+    userData.cv_incoming_data = &cv_incoming_data;
 
     // Setting the callbacks for the MQTT Client
     mosquitto_message_callback_set(mosq_client, mqtt_on_message);
     mosquitto_connect_callback_set(mosq_client, mqtt_on_connect);
 
-    // set the userdata for the client instance
-    mosquitto_user_data_set(mosq_client, &UserData);
+    // set the userData for the client instance
+    mosquitto_user_data_set(mosq_client, &userData);
 
     // Establish connection to the broker
     ret = mosquitto_connect(mosq_client, options.mqtt_server.c_str(), mqtt_port, mqtt_keepalive);
@@ -209,35 +209,39 @@ ssnppl_error Ssnppl_demonstrator::init_mqtt()
 
 void Ssnppl_demonstrator::handle_data()
 {
+    std::unique_lock<std::mutex> mutex{lk_incoming_data};
+    // Wait for signal of new data (MQTT or LBAND or GGA/EPH)
+    cv_incoming_data.wait(lk_incoming_data);
+
     // Handle MQTT
     {
-        std::lock_guard<std::mutex> lock(UserData.message_queue_mutex);
-        if (!UserData.message_queue.empty())
+        std::lock_guard<std::mutex> lock(userData.message_queue_mutex);
+        if (!userData.message_queue.empty())
         {
             struct mqttMessgae message;
             {
-                message = UserData.message_queue.front();
+                message = userData.message_queue.front();
 
                 // Writting the payload of each topics into the struct's variables
                 std::cout << "\nNew MQTT Message reveiced." << std::endl;
                 std::cout << "  Topic Name: " << message.topic << std::endl;
                 std::cout << "  Topic Size: " << message.payloadlen << std::endl;
                 std::cout << std::endl;
-                UserData.message_queue.pop();
+                userData.message_queue.pop();
             }
             // Handle message
-            if (message.topic == UserData.freqTopic)
+            if (message.topic == userData.freqTopic && update_receiver == false)
             {
                 // Parse the JSON string
                 nlohmann::json json = nlohmann::json::parse(message.payload);
                 // JSON comes in a string format, then convert it to float (std::stof) to not lose decimals when changing the unit to Hz,
                 // translate it to int number (static_cast<int>) bc the receiver only accepts integer number and finally return it as a string (std::to_string).
-                std::string freqValue = json["frequencies"][UserData.region]["current"]["value"];
+                std::string freqValue = json["frequencies"][userData.region]["current"]["value"];
                 freqInfo = std::to_string(static_cast<int>(std::stof(freqValue) * 1000000)); // in Hertz
 
                 update_receiver = true;
             }
-            else if (message.topic == UserData.keyTopic)
+            else if (message.topic == userData.keyTopic)
             {
                 // Parse the JSON string
                 nlohmann::json json = nlohmann::json::parse(message.payload);
@@ -265,19 +269,27 @@ void Ssnppl_demonstrator::handle_data()
                     std::cout << std::endl;
                 }
             }
-            else if (message.topic == UserData.corrTopic)
+            else if (message.topic == userData.corrTopic)
             {
 
                 std::vector<uint8_t> mqtt_data = std::vector<uint8_t>(message.payload.begin(), message.payload.end());
                 std::array<uint8_t, PPL_MAX_RTCM_BUFFER> rtcm_buffer;
                 uint32_t rtcm_size;
-
-                if (PPL_SendSpartn(mqtt_data.data(), mqtt_data.size()) == ePPL_Success)
+                ePPL_ReturnStatus ePPLRet = PPL_SendSpartn(mqtt_data.data(), mqtt_data.size());
+                if ((ePPLRet) == ePPL_Success)
                 {
                     PPL_GetRTCMOutput(rtcm_buffer.data(), PPL_MAX_RTCM_BUFFER, &rtcm_size);
-
-                    std::lock_guard<std::mutex> lock(rtcm_queue_mutex);
-                    rtcm_queue.push(std::vector<uint8_t>(rtcm_buffer.begin(), rtcm_buffer.begin() + rtcm_size));
+                    if (!is_empty(rtcm_buffer.data(), rtcm_size))
+                    {
+                        std::unique_lock<std::mutex> lock(rtcm_queue_mutex);
+                        rtcm_queue.push(std::vector<uint8_t>(rtcm_buffer.begin(), rtcm_buffer.begin() + rtcm_size));
+                        lock.unlock();
+                        cv_rtcm.notify_one();
+                    }
+                }
+                else
+                {
+                    std::cout << "FAILED TO SEND IP DATA:  " << ePPLRet << std::endl;
                 }
             }
         }
@@ -324,8 +336,10 @@ void Ssnppl_demonstrator::handle_data()
                 PPL_GetRTCMOutput(rtcm_buffer.data(), PPL_MAX_RTCM_BUFFER, &rtcm_size);
                 if (!is_empty(rtcm_buffer.data(), rtcm_size))
                 {
-                    std::lock_guard<std::mutex> mutex(rtcm_queue_mutex);
+                    std::unique_lock<std::mutex> mutex(rtcm_queue_mutex);
                     rtcm_queue.push(std::vector<uint8_t>(rtcm_buffer.begin(), rtcm_buffer.begin() + rtcm_size));
+                    mutex.unlock();
+                    cv_rtcm.notify_one();
                 }
             }
             lband_queue.pop();
@@ -351,7 +365,7 @@ ssnppl_error Ssnppl_demonstrator::init_ppl()
     }
     else if (options.mode == "Dual")
     {
-        ePPLRet = PPL_Initialize(PPL_CFG_DEFAULT_CFG);
+        ePPLRet = PPL_Initialize(PPL_CFG_ENABLE_IP_CHANNEL | PPL_CFG_ENABLE_AUX_CHANNEL);
     }
 
     if (ePPLRet != ePPL_Success)
@@ -445,28 +459,17 @@ void Ssnppl_demonstrator::init_receiver()
         read_lband_data_thread = std::thread(&Ssnppl_demonstrator::read_lband_data, this);
 }
 
-
 void Ssnppl_demonstrator::write_rtcm()
 {
+    if (options.mode != "Ip")
+    {
+        // Wait to have frq before entering loop if LBand
+        while (!update_receiver)
+            std::this_thread::yield();
+    }
+
     while (true)
     {
-        {
-            std::lock_guard<std::mutex> mutex(rtcm_queue_mutex);
-            if (!rtcm_queue.empty())
-            {
-                auto message = rtcm_queue.front();
-
-                std::vector<int> rtcm_id = identifyRTCM3MessageIDs(message.data(), message.size());
-                std::cout<<"Sending RTCM3 messages, id = ";
-                for(int &id: rtcm_id)
-                    std::cout<<id<<" ";
-                std::cout<<std::endl;
-
-                main_channel.sync_write(message.data(), message.size());
-                rtcm_queue.pop();
-            }
-        }
-
         if (update_receiver)
         {
             std::cout << "New frq, update receiver" << std::endl;
@@ -485,16 +488,33 @@ void Ssnppl_demonstrator::write_rtcm()
             std::this_thread::sleep_for(std::chrono::seconds(1));
             update_receiver = false;
         }
+
+        {
+            std::unique_lock<std::mutex> mutex(rtcm_queue_mutex);
+
+            // wait for new rtcm message to send
+            cv_rtcm.wait(mutex, [this]
+                         { return !rtcm_queue.empty(); });
+
+            auto message = rtcm_queue.front();
+
+            std::vector<int> rtcm_id = identifyRTCM3MessageIDs(message.data(), message.size());
+            std::cout << "Sending RTCM3 messages";
+            if (rtcm_id.size() > 0)
+            {
+                std::cout << ", id = ";
+                for (int &id : rtcm_id)
+                    std::cout << id << " ";
+            }
+
+            std::cout << std::endl;
+
+            main_channel.sync_write(message.data(), message.size());
+            rtcm_queue.pop();
+        }
     }
 }
 
-void print(std::vector<uint8_t> const &input)
-{
-    for (int i = 0; i < input.size(); i++)
-    {
-        std::cout << input.at(i) << ' ';
-    }
-}
 void Ssnppl_demonstrator::read_lband_data()
 {
     while (true)
@@ -508,12 +528,11 @@ void Ssnppl_demonstrator::read_lband_data()
             std::lock_guard<std::mutex> mutex(lband_queue_mutex);
 
             std::vector<uint8_t> lband_vector(buff, buff + size);
-            // print(lband_vector);
             lband_queue.push(lband_vector);
         }
 
         lband_channel.clearSyncBuffer();
-
+        cv_incoming_data.notify_all();
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
@@ -535,7 +554,7 @@ void Ssnppl_demonstrator::read_ephemeris_gga_data()
         }
 
         main_channel.clearSyncBuffer();
-
+        cv_incoming_data.notify_all();
         std::this_thread::sleep_for(std::chrono::seconds(3));
     }
 }
@@ -550,7 +569,7 @@ ssnppl_error Ssnppl_demonstrator::dispatch_forever()
 
 Ssnppl_demonstrator::~Ssnppl_demonstrator()
 {
-    //Stop MQTT
+    // Stop MQTT
     mosquitto_disconnect(mosq_client);
     mosquitto_loop_stop(mosq_client, true);
 }

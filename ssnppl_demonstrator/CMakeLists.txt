@@ -14,7 +14,7 @@ set(CMAKE_BUILD_TYPE Release)
 #Check PPL Lib
 find_library(PPL_LIB_PATH "libpointperfect.a" PATHS ${CMAKE_SOURCE_DIR}/PPL/lib REQUIRED)
 
-add_executable(ssnppl_demonstrator src/main.cpp src/ssnppl.cpp src/SerialComm.cpp src/program_option.cpp src/mqtt.cpp include/utils.hpp)
+add_executable(ssnppl_demonstrator src/main.cpp src/ssnppl.cpp src/SerialComm.cpp src/program_option.cpp src/mqtt.cpp src/utils.cpp)
 
 target_include_directories(ssnppl_demonstrator PRIVATE ${CMAKE_SOURCE_DIR}/include ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/PPL/inc)
 target_link_libraries(ssnppl_demonstrator PRIVATE Boost::program_options Threads::Threads Boost::thread mosquitto ${PPL_LIB_PATH})
