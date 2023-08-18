@@ -8,6 +8,7 @@
 |------|--------|
 | Iker Uranga | <a href="https://github.com/IkerUranga10">IkerUranga10</a> </br> |    
 | Duck Jiang | <a href="https://github.com/duckjiang">duckjiang</a> </br> |  
+| Luc Gousset | <a href="https://github.com/Luc-Gousset">Luc-Gousset</a> </br> |  
    
 ## Septentrio Links for Users  
   
@@ -36,6 +37,8 @@ We would like you to mention our disclaimer about that setup and the guides in g
 
 ## License: 
 
+See [LICENCE](../LICENSE)
+
 ## TABLE OF CONTENTS
 
 <!--ts-->
@@ -43,17 +46,18 @@ We would like you to mention our disclaimer about that setup and the guides in g
 * [Introduction](#introduction)
 * [Different operating modes](#introduction)
 * [Main parts of the code](#main-parts-of-the-code)
-* [Code dependencies](#code-dependencies)
-* [Download the Glue Code](#download-the-glue-code)
+* [How to run the demonstrator](#How-to-run-the-demonstrator)
+  * [Step 1: Install code dependencies](#step-1-install-code-dependencies)
+  * [Step 2: Download the source code and add the PointPerfect library](#step-2-download-the-source-code-and-add-the-pointperfect-library)
+  * [Step 3: Compile the source code](#step-3-compile-the-source-code)
+  * [Step 4: Add the files for MQTT authentification](#step-4-add-the-files-for-mqtt-authentification)
+  * [Step 5: Run the demonstrator](#step-5-run-the-demonstrator)
 * [List of parameters](#list-of-parameters)
   * [General program logic parameter list](#general-program-logic-parameter-list)
   * [Logging Configuration parameter list](#logging-configuration-parameter-list)
   * [Serial Communication parameter list](#serial-communication-parameter-list)
   * [MQTT Configuration parameter list](#mqtt-configuration-parameter-list )
-* [Code compilation](#code-compilation)
-* [Code execution](#code-execution)
 * [Further information](#further-information)
-* [Testing](#testing)
 * [Suggestions and improvements](#suggestions-and-improvements)
   
 <!--te-->
@@ -81,30 +85,9 @@ Therefore, the **selection of the SPARTN data source conditions some elements of
 
 Thus, from now on we will refer to two modes of operation, these are **LBand Mode** and **MQTT Mode**. The selection and configuration of these operating modes is done through the different execution parameters of the compiled code, as described in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/user/README.md#list-of-parameters">parameter list section</a>.
 
-## MAIN PARTS OF THE CODE
-
-<p align="center">
-    <img src="doc_sources/gluecode_diagram_simple.jpg" width="50%">
-
-First of all, the most important thing about the structure of the code and its flow is that it has an initialization part and another part that contains a loop in which it will be running indefinitely or for a certain time (the latter is done by a timer, more information in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/user/README.md#list-of-parameters">parameter list section</a>).
+# How to run the demonstrator
   
-As the first part of the initialization, there is the **Check Program Options** part, which is responsible for collecting all the configuration of the parameters entered by the user, in order to **run the program based on these parameters**.
-
-Secondly, there is a part of the code that opens a serial port communication with the septentrio receiver and by **sending commands it is configured to operate in the correct way for the selected mode** (Remember, LBand mode or MQTT Mode). There is also the option to send or not to send commands, as the user wishes, by means of an execution parameter.
-  
-The next step of the initialization of the program is the creation of an MQTT client, its configuration and connection to the broker, in this way we will be able to access the MQTT topics. It is important to mention that in order to connect to this MQTT broker it is necessary to download several files and to have access to a password. These credentials are obtained by purchasing a plan of uBlox correction services for PointPerfect through the  <a href="https://thingstream.io">Thingstream platform</a>. If you have any questions about accessing this service or your keys through this platform, please contact uBlox support. As the last step of the initialization block, the PointPerfect library is initialized depending on the mode (LBand mode or MQTT Mode) selected by the user in the parameters. 
-
-After initialization is complete, the main loop begins, which will run until the user manually stops the program, runs out of execution time (if the user has configured it to do so), or some other critical failure occurs.
-
-In resume, the main loop continuously repeats the following steps:
-
-- Receives Ephemeris and NMEA from the receiver and sends them to the library.
-
-- Receives SPARTN data from the SPARTN data source selected by the user and sends it to the library.
-
-- Once the library has access to the information from the two previous points, if the information is of sufficient quality, it will produce RTCM correction data and it will be sent to the receiver.
-  
-## CODE DEPENDENCIES
+## Step 1: Install code dependencies
 
 The code has some dependencies that are third-party libraries beyond the standard libraries. These third-party libraries, except for the PointPerfect Library, are Open-Source with MIT license. These are the steps for installing all the dependencies:
 
@@ -133,13 +116,19 @@ sudo apt-get install libmosquitto-dev -y
 sudo apt-get install libboost-all-dev
 ```
 
-6- Update the package index:
+6- Install CMake
+```
+sudo apt-get install make cmake 
+```
+
+7- Update the package index:
 ```
 sudo apt-get update
 ```
 
-Additionally, PointPerfect LIbrary is also a dependency, but it is already in the repository.
-## DOWNLOAD THE GLUE CODE
+Additionally, PointPerfect library is also a dependency. To obtain the PointPerfect library please consult uBlox.
+
+## Step 2: Download the source code and add the PointPerfect library
   
 To download the code, simply clone this repository, since the cluecode is located inside it, specifically in the folder called 'gluecode'. To clone the repository, enter the following command in the terminal:
   
@@ -147,7 +136,51 @@ To download the code, simply clone this repository, since the cluecode is locate
 git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio.git
 ``` 
   
-For obtaining the PointPerfect library please consult uBlox. Then put it in the pp folder inside include directory and make sure that the path to it is correct.
+Now, copy the *inc* and *lib* folder from the PointPerfect library to the folder *ssnppl_demonstrator/ppl*
+
+## Step 3: Compile the source code
+
+To compile the code, just navigate to the ssnppl_demonstrator folder and execute the following command:
+
+```
+cmake .
+make
+```
+
+Afterward, the *ssnppl_demonstrator* binary is generated.
+
+## Step 4: Add the files for MQTT authentification 
+
+In order to use the mqtt with the PointPerfect library, you need 3 files that you can download from the Thingstream platform.
+
+* AmazonRootCA1.pem
+* device-XXXXXXX-pp-cert.crt
+* device-XXXXXXX-pp-key.pem
+
+XXXXXXX refere to your client ID.
+
+Download and copy those files onto *ssnppl_demonstrator/auth* 
+
+## Step 5: Run the demonstrator
+
+These are the basic command executions, without using all the available parameters, see the section below to know more about the [program's parameters](#list-of-parameters).
+
+Navigate to src folder and run:
+
+RUN WITH MQTT - (With Basic options)
+```
+./ssnppl_demonstrator/ssnppl_demonstrator --mode Ip \
+--main_comm USB --main_config /dev/ttyACM0@115200 \
+--client_id <your_client_ID_here> 
+```
+
+RUN WITH LBAND - (With Basic options)
+```
+./ssnppl_demonstrator/ssnppl_demonstrator --mode Lb --main_comm USB --main_config /dev/ttyACM0@115200 \
+--lband_comm USB --lband_config /dev/ttyACM1@115200 \
+--client_id <your_client_ID_here>
+```
+
 
 ## LIST OF PARAMETERS
 
@@ -214,43 +247,8 @@ These parameters are used to configure the serial communication with the receive
 
 These parameters are used to configure the MQTT client. Normally only the client ID, obtained from the thingstream platform, is required.
     
-## CODE COMPILATION
-  
-For compiling the code, just navigate to the src folder and execute the following command:
 
-```
-g++ -std=c++11 -o ../build/gluecode gluecode.cpp \
--I../include/pointPerfect/PPL_64_Bit/inc/ \
--I../include/mqtt/ \
--I../include/serialComm/ \
--L../include/pointPerfect/PPL_64_Bit/lib \
--lmosquitto \
--lpointperfect \
--pthread \
--lboost_system \
--lboost_thread \
--lboost_program_options
-```
 
-## CODE EXECUTION
-
-These are the basic command executions, without using all the available parameters, see this section to know more about the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/user#list-of-parameters">program's parameters</a>.
-
-Navigate to src folder and run:
-
-RUN WITH MQTT - (With Basic options)
-```
-./build/gluecode --mode Ip \
---main_comm USB --main_config /dev/ttyACM0@115200 \
---client_id <your_client_ID_here> 
-```
-
-RUN WITH LBAND - (With Basic options)
-```
-./build/gluecode --mode Lb --main_comm USB --main_config /dev/ttyACM0@115200 \
---lband_comm USB --lband_config /dev/ttyACM1@115200 \
---client_id <your_client_ID_here>
-```
 
 ## FURTHER INFORMATION
 
@@ -261,19 +259,6 @@ If you want to know more details about how the code works, you can visit the doc
 <div align="center">
 
 | <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev#how-to-guide-for-developer-implementation-of-ubloxs-pointperfec-library-for-gnss-corrections">Click here to visit the documentation for developers</a> |
-|---|
-   
-</div>
-
-## TESTING
-
-To test the code, a script has been created to run the compiled binary code file called 'gluecode'.
-
-The purpose of the script is to run the executable several times to make the receiver work with corrections with different <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/user#list-of-parameter">program execution arguments</a> (configuration). The purpose of the test is to check the performance of the corrections in the receiver. The code is not designed to test the performance of the code itself, as <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/user#suggestions-and-improvements">there are some things that could be improved</a> because this code is a sample code to help users and developers to implement the Pointperfect library in their system based on this code.
-
-<div align="center">
-
-| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/gluecode/testing#testing-septentrios-gluecode-for-working-with-ubloxs-pointperfect-correction-services-for-precise-positioning">Click here to navigate to Testing Septentrio's gluecode for working with uBlox's Pointperfect correction services for precise positioning guide</a> |
 |---|
    
 </div>
