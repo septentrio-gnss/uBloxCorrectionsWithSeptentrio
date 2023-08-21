@@ -101,13 +101,14 @@ private:
     ssnppl_error init_lband_comm();
 
     // MQTT
-    struct mosquitto *mosq_client;
+    struct mosquitto *mosq_client = nullptr;
     UserData userData;
     ssnppl_error init_mqtt();
 
     // SPARTN LOG
     std::ofstream SPARTN_file_Ip;
     std::ofstream SPARTN_file_Lb;
+    void init_SPARTN_LOG();
 
 public:
     // Default Ctor and Dtor

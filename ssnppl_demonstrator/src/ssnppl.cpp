@@ -57,7 +57,7 @@ ssnppl_error Ssnppl_demonstrator::init(int argc, char *argv[])
     {
         return ssnppl_error::FAIL;
     }
-
+    init_SPARTN_LOG();
     init_receiver();
 
     if (init_mqtt() != ssnppl_error::SUCCESS)
@@ -275,6 +275,9 @@ void Ssnppl_demonstrator::handle_data()
                 std::vector<uint8_t> mqtt_data = std::vector<uint8_t>(message.payload.begin(), message.payload.end());
                 std::array<uint8_t, PPL_MAX_RTCM_BUFFER> rtcm_buffer;
                 uint32_t rtcm_size;
+                if (options.SPARTN_Logging != "none")
+                    SPARTN_file_Ip.write((char *)mqtt_data.data(), mqtt_data.size()).flush();
+
                 ePPL_ReturnStatus ePPLRet = PPL_SendSpartn(mqtt_data.data(), mqtt_data.size());
                 if ((ePPLRet) == ePPL_Success)
                 {
@@ -321,6 +324,8 @@ void Ssnppl_demonstrator::handle_data()
         if (!lband_queue.empty())
         {
             std::vector<uint8_t> msg = lband_queue.front();
+            if (options.SPARTN_Logging != "none")
+                SPARTN_file_Lb.write((char *)msg.data(), msg.size()).flush();
 
             ePPL_ReturnStatus ePPLRet = PPL_SendAuxSpartn(msg.data(), msg.size());
             if (ePPLRet != ePPL_Success)
@@ -567,9 +572,34 @@ ssnppl_error Ssnppl_demonstrator::dispatch_forever()
     }
 }
 
+void Ssnppl_demonstrator::init_SPARTN_LOG()
+{
+    // Set SPARTN Loggin, if enabled
+    if (options.SPARTN_Logging != "none")
+    {
+
+        // Depending on the program logic mode, open file(s)
+        if (options.mode == "Ip")
+            SPARTN_file_Ip.open(options.SPARTN_Logging + "_Ip.bin", std::ios::binary);
+        else if (options.mode == "Lb")
+            SPARTN_file_Lb.open(options.SPARTN_Logging + "_Lb.bin", std::ios::binary);
+        else if (options.mode == "Dual")
+        {
+            SPARTN_file_Ip.open(options.SPARTN_Logging + "_Ip.bin", std::ios::binary);
+            SPARTN_file_Lb.open(options.SPARTN_Logging + "_Lb.bin", std::ios::binary);
+        }
+    }
+}
+
 Ssnppl_demonstrator::~Ssnppl_demonstrator()
 {
     // Stop MQTT
-    mosquitto_disconnect(mosq_client);
-    mosquitto_loop_stop(mosq_client, true);
+    if (mosq_client != nullptr)
+    {
+        mosquitto_disconnect(mosq_client);
+        mosquitto_loop_stop(mosq_client, true);
+    }
+
+    if (SPARTN_file_Ip.is_open()) SPARTN_file_Ip.close();
+    if (SPARTN_file_Lb.is_open()) SPARTN_file_Lb.close();
 }
