@@ -126,11 +126,11 @@ sudo apt-get install make cmake
 sudo apt-get update
 ```
 
-Additionally, PointPerfect library is also a dependency. To obtain the PointPerfect library please consult uBlox.
+Additionally, PointPerfect library is also a dependency. To obtain the PointPerfect library, please consult uBlox.
 
 ## Step 2: Download the source code and add the PointPerfect library
   
-To download the code, simply clone this repository, since the cluecode is located inside it, specifically in the folder called 'gluecode'. To clone the repository, enter the following command in the terminal:
+To download the code, simply clone this repository, since the source code is located inside it, specifically in the folder called 'ssnppl_demonstrator'. To clone the repository, enter the following command in the terminal:
   
 ```
 git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio.git
@@ -157,7 +157,7 @@ In order to use the mqtt with the PointPerfect library, you need 3 files that yo
 * device-XXXXXXX-pp-cert.crt
 * device-XXXXXXX-pp-key.pem
 
-XXXXXXX refere to your client ID.
+XXXXXXX refers to your client ID.
 
 Download and copy those files onto *ssnppl_demonstrator/auth* 
 
