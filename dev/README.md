@@ -8,6 +8,7 @@
 |------|--------|
 | Iker Uranga | <a href="https://github.com/IkerUranga10">IkerUranga10</a> </br> |    
 | Duck Jiang | <a href="https://github.com/duckjiang">duckjiang</a> </br> |  
+| Luc Gousset | <a href="https://github.com/Luc-Gousset">Luc-Gousset</a> </br> |  
    
 ## Septentrio Links for Users  
   
@@ -43,15 +44,13 @@ We would like you to mention our disclaimer about that setup and the guides in g
 * [Introduction](#introduction)
 * [Different operating modes](#introduction)
 * [Main parts of the code](#main-parts-of-the-code)
-  * [Initialization part](#initialization-part)
-  * [Main loop part](#main-loop-part)
 * [Code dependencies](#code-dependencies)
 * [Download the Glue Code](#download-the-glue-code)
 * [List of parameters](#list-of-parameters)
   * [General program logic parameter list](#general-program-logic-parameter-list)
   * [Logging Configuration parameter list](#logging-configuration-parameter-list)
   * [Serial Communication parameter list](#serial-communication-parameter-list)
-  * [MQTT Configuration parameter list](#mqtt-configuration-parameter-list )
+  * [MQTT Configuration parameter list](#mqtt-configuration-parameter-list)
 * [Code compilation](#code-compilation)
 * [Code execution](#code-execution)
 * [Testing](#testing)
@@ -61,7 +60,7 @@ We would like you to mention our disclaimer about that setup and the guides in g
 
 ## INTRODUCTION
 
-This documentation is a user implementation guide for integrating PointPerfect correction services into an example system setup based on Mosaic-Go + Raspberry Pi 4. The guide to set up this setup is documented in the link below. It is a sample guide so that you can implement your own based on this system or other similar systems should you wish to do so. On Septentrio's side only tests have been done with this setup.
+This documentation is a user implementation guide for integrating PointPerfect correction services into an example system setup based on Mosaic-Go + Raspberry Pi 4. The guide to set up this setup is documented in the link below. It is a sample guide so that you can implement your own based on this system or other similar systems should you wish to do so. On Septentrio's side, only tests have been done with this setup.
 
 <div align="center">
 
@@ -84,106 +83,38 @@ Thus, from now on we will refer to two modes of operation, these are **LBand Mod
 
 ## MAIN PARTS OF THE CODE
 
-<p align="center">
-    <img src="doc_sources/gluecode_diagram.jpg" width="100%">
-
-First of all, the most important thing about the structure of the code and its flow is that it has an initialization part and another part that contains a loop in which it will be running indefinitely or for a certain time (the latter is done by a timer, more information in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/user/README.md#list-of-parameters">parameter list section</a>).
-  
 As the first part of the initialization, there is the **Check Program Options** part, which is responsible for collecting all the configuration of the parameters entered by the user, in order to **run the program based on these parameters**.
 
 Secondly, there is a part of the code that opens a serial port communication with the septentrio receiver and by **sending commands it is configured to operate in the correct way for the selected mode** (Remember, LBand mode or MQTT Mode). There is also the option to send or not to send commands, as the user wishes, by means of an execution parameter.
   
 The next step of the initialization of the program is the creation of an MQTT client, its configuration and connection to the broker, in this way we will be able to access the MQTT topics. It is important to mention that in order to connect to this MQTT broker it is necessary to download several files and to have access to a password. These credentials are obtained by purchasing a plan of uBlox correction services for PointPerfect through the  <a href="https://thingstream.io">Thingstream platform</a>. If you have any questions about accessing this service or your keys through this platform, please contact uBlox support. As the last step of the initialization block, the PointPerfect library is initialized depending on the mode (LBand mode or MQTT Mode) selected by the user in the parameters. 
 
-After initialization is complete, the main loop begins, which will run until the user manually stops the program, runs out of execution time (if the user has configured it to do so), or some other critical failure occurs.
+Finaly, threads are launch to fetch and send data to the receiver.
+
+<p align="center">
+    <img src="doc_sources/flow.png" width="80%">
+</p>
+
+One thread fetch data coming from the main serial port (GGA and RTCM), put it onto a queue and notify the main loop that data is available for processing.
+
+Another thread fetch data coming from the aux serial port (LBand SPART), put it onto a queue and notify the main loop that data is available for processing.
+
+And a last thread is used to send back RTCM correction to the main serial port.
+
+The MQTT thread is hidden behind the mosquitto library and use a callback to notify the main loop that a new MQTT message is available.
+
+After initialization is complete, the main loop begins, which will run until the user manually stops the program or some other critical failure occurs.
 
 In resume, the main loop continuously repeats the following steps:
 
-- Receives Ephemeris and NMEA from the receiver and sends them to the library.
-
-- Receives SPARTN data from the SPARTN data source selected by the user and sends it to the library.
-
-- Once the library has access to the information from the two previous points, if the information is of sufficient quality, it will produce RTCM correction data and it will be sent to the receiver.
-
-In the following two sub-sectinos called <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev#initialization-part">Initialization part</a> and <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev#main-loop-part">Main loop part</a>, a more detailed description of the code is given. Its porpuse is to give a general overview of the code logic of each block of the program (<a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/dev/doc_sources/gluecode_diagram.jpg">shown in this picture</a>) while mentioning which of the imported libraries are been used and why.
-
-### Initialization part
-
-<details>
-<summary>Check program Options</summary>
-
-In this part of the code, the options selected by the user are shown by means of the different flags that appear in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/dev#list-of-parameters">parameter list</a>. This code block is also in charge of assigning the value of the options to a structure called **Program Options**, which will be used to execute the different blocks of the code in the correct way, adapting to the options specified by the user.
-  
-</details>
-  
-<details>
-<summary>Initialize GNSS Receiver</summary>
-
-This code block is responsible for opening a serial port for communication between the Raspberry PI and the Receiver. In case the user has specified that the program should run in LBand mode, another secondary serial port will also be opened to transmit the raw LBand data from the receiver to the Raspberry Pi. In both cases, the serial port parameters are also obtained from the program options.
-
-Once the serial port is opened, also depending on the user options, the program will send or not some commands to configure the receiver in the appropriate way for the operation of the program. Some of the commands sent for receiver configuration in this block contain information obtained from the configuration parameters entered by the user in the run command, and there is also a program option to send a factory reset configuration command to the receiver. 
-  
-</details>
-  
-<details>
-<summary>Create MQTT Client</summary>
-  
-For the creation, configuration and operation of the MQTT client, this part of the program uses files available on the <a href="https://thingstream.io">Thingstream platform</a> for authentication for the connection to the MQTT broker of the PointPerfect location service and the client ID entered by the user in the program options. In addition, it subscribes to the topics necessary for the operation of the program, also specified by the user in the program options.
-  
-</details>
-  
-<details>
-<summary>Initialize PointPerfect Library</summary>
-  
-This part is responsible for initializing the PointPerfect Library, adapted to the operating mode. To do this, the library is initialized with a parameter depending on the operating mode and is authenticated through the information of the dynamic key coming from an MQTT topic.
-
-</details>
-  
-### Main loop part
-
-<details>
-<summary>Check for New LBand Frequency</summary>
-  
-Each iteration of the main loop checks if there is a new LBand frequency available from the MQTT topic, in case LBand data is used, for the **Lb** and **Dual** operation mode. If you are using one of these two operating modes and there is also a new frequency, the program takes care of updating this information in the receiver by sending a new command through the serial port, in a similar way as it is done in the initialization part of the GNSS receiver.
-
-</details>  
-  
-<details>
-<summary>Check for New Dynamic Key</summary>
-
-Each iteration of the main loop checks if there is a new Dynamic Key available from the MQTT topic, regardless of the operation mode. If there is a new Dynamic Key available, the program takes care of updating this information in the receiver by sending a new command through the serial port, in a similar way as it is done in the initialization part of the GNSS receiver.  
-  
-</details>  
-  
-<details>
-<summary>Get NMEA / Ephemeris from GNSS Receiver</summary>
- 
-As discussed in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio#point-perfect-library">PointPerfect Library section</a>, the library first needs Ephemeris and NMEA information from the receiver, so this part of the code takes care of receiving that information and sending it to the library.
-
-</details>   
-  
-<details>
-<summary>Get SPARTN data from MQTT or LBand</summary>
-  
-This part of the code is responsible for obtaining SPARTN corrections from the SPARTN corrections source selected by the user in the program options section. If the source is LBand it gets the corrections through the secondary serial port connected to the receiver and if the source is MQTT it gets the corrections from an MQTT topic. In case the operation mode is Dual, the program performs both operations of obtaining SPARTN data from both sources.  
-  
-</details>  
-  
-<details>
-<summary>Send SPARTN data to Library</summary>
-  
-As discussed in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio#point-perfect-library">PointPerfect Library section</a>, the library needs the corrections in SPARTN format to decode them and with this information, together with the Ephemeris and NMEA information from the receiver, it can compute the corrections in RTCM v3 format that will later be sent to the receiver.
-
-This part of the program is responsible for obtaining the SPARTN information from the source specified by the user and sending it to the library. This source can be LBand obtained through the receiver's auxiliary serial port, or it can be obtained through an MQTT topic.
-
-</details>  
-  
-<details>
-<summary>Get corrections from Library and send them to GNSS Receiver</summary>
-  
-Once the library has the SPARTN and Ephemeris + NMEA information, if the data quality is adequate, it will start to produce corrections in RTCM v3 format that will be sent to the receiver. This part of the program takes care of obtaining these RTCM corrections, in case the library has produced them, and sends them to the receiver through the main serial port.
-
-</details>  
+- Wait for new incoming data (MQTT messages, GGA or LBand data)
+- Process the data
+  - If there is a new MQTT message, process the message
+    - If the message contains a new key or new frequency, update with the latest value
+    - If the message contains SPART data, send the data to the PPL library and ask for new RTCM correction. 
+  - If there is raw GGA or ephemiris available, send the data to the PPL library
+  - If there is raw LBand data available, send the data to the PPL library and ask for new RTCM correction.
+- If new RTCM correction is available from the PPL library, put the data onto a queue and notify the thread that send RTCM to the receiver that new data is available.
 
 ## CODE DEPENDENCIES
 
@@ -297,21 +228,14 @@ These parameters are used to configure the MQTT client. Normally only the client
     
 ## CODE COMPILATION
   
-For compiling the code, just navigate to the src folder and execute the folloginc command:
+To build the code, just navigate to the ssnppl_demonstrator folder and execute the following command:
 
 ```
-g++ -std=c++11 -o ../build/gluecode gluecode.cpp \
--I../include/pointPerfect/PPL_64_Bit/inc/ \
--I../include/mqtt/ \
--I../include/serialComm/ \
--L../include/pointPerfect/PPL_64_Bit/lib \
--lmosquitto \
--lpointperfect \
--pthread \
--lboost_system \
--lboost_thread \
--lboost_program_options
+cmake .
+make
 ```
+
+Afterward, the *ssnppl_demonstrator* binary is generated.
 
 ## CODE EXECUTION
 
@@ -321,14 +245,14 @@ Navigate to src folder and run:
 
 RUN WITH MQTT - (With Basic options)
 ```
-./build/gluecode --mode Ip \
+./ssnppl_demonstrator/ssnppl_demonstrator --mode Ip \
 --main_comm USB --main_config /dev/ttyACM0@115200 \
 --client_id <your_client_ID_here> 
 ```
 
 RUN WITH LBAND - (With Basic options)
 ```
-./build/gluecode --mode Lb --main_comm USB --main_config /dev/ttyACM0@115200 \
+./ssnppl_demonstrator/ssnppl_demonstrator --mode Lb --main_comm USB --main_config /dev/ttyACM0@115200 \
 --lband_comm USB --lband_config /dev/ttyACM1@115200 \
 --client_id <your_client_ID_here>
 ```
