@@ -169,14 +169,14 @@ Navigate to src folder and run:
 
 RUN WITH MQTT - (With Basic options)
 ```
-./ssnppl_demonstrator/ssnppl_demonstrator --mode Ip \
+./ssnppl_demonstrator --mode Ip \
 --main_comm USB --main_config /dev/ttyACM0@115200 \
 --client_id <your_client_ID_here> 
 ```
 
 RUN WITH LBAND - (With Basic options)
 ```
-./ssnppl_demonstrator/ssnppl_demonstrator --mode Lb --main_comm USB --main_config /dev/ttyACM0@115200 \
+./ssnppl_demonstrator --mode Lb --main_comm USB --main_config /dev/ttyACM0@115200 \
 --lband_comm USB --lband_config /dev/ttyACM1@115200 \
 --client_id <your_client_ID_here>
 ```
