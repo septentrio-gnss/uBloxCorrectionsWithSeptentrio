@@ -473,7 +473,7 @@ void Ssnppl_demonstrator::write_rtcm()
             std::this_thread::yield();
     }
 
-    while (true)
+    while (thread_running)
     {
         if (update_receiver)
         {
@@ -498,31 +498,35 @@ void Ssnppl_demonstrator::write_rtcm()
             std::unique_lock<std::mutex> mutex(rtcm_queue_mutex);
 
             // wait for new rtcm message to send
-            cv_rtcm.wait(mutex, [this]
+            cv_rtcm.wait_for(mutex, std::chrono::seconds(1), [this]
                          { return !rtcm_queue.empty(); });
 
-            auto message = rtcm_queue.front();
-
-            std::vector<int> rtcm_id = identifyRTCM3MessageIDs(message.data(), message.size());
-            std::cout << "Sending RTCM3 messages";
-            if (rtcm_id.size() > 0)
+            if(!rtcm_queue.empty())
             {
-                std::cout << ", id = ";
-                for (int &id : rtcm_id)
-                    std::cout << id << " ";
+                auto message = rtcm_queue.front();
+
+                std::vector<int> rtcm_id = identifyRTCM3MessageIDs(message.data(), message.size());
+                std::cout << "Sending RTCM3 messages";
+                if (rtcm_id.size() > 0)
+                {
+                    std::cout << ", id = ";
+                    for (int &id : rtcm_id)
+                        std::cout << id << " ";
+                }
+
+                std::cout << std::endl;
+
+                main_channel.sync_write(message.data(), message.size());
+                rtcm_queue.pop();
+
             }
-
-            std::cout << std::endl;
-
-            main_channel.sync_write(message.data(), message.size());
-            rtcm_queue.pop();
         }
     }
 }
 
 void Ssnppl_demonstrator::read_lband_data()
 {
-    while (true)
+    while (thread_running)
     {
         size_t size = lband_channel.sync_read();
 
@@ -544,7 +548,7 @@ void Ssnppl_demonstrator::read_lband_data()
 
 void Ssnppl_demonstrator::read_ephemeris_gga_data()
 {
-    while (true)
+    while (thread_running)
     {
         size_t size = main_channel.sync_read();
 
@@ -564,12 +568,16 @@ void Ssnppl_demonstrator::read_ephemeris_gga_data()
     }
 }
 
-ssnppl_error Ssnppl_demonstrator::dispatch_forever()
+ssnppl_error Ssnppl_demonstrator::dispatch()
 {
-    while (true)
+    auto start = std::chrono::high_resolution_clock::now();
+    
+    while (options.timer == 0 || std::chrono::high_resolution_clock::now() - start <= std::chrono::seconds(options.timer))
     {
         handle_data();
     }
+
+    return ssnppl_error::SUCCESS;
 }
 
 void Ssnppl_demonstrator::init_SPARTN_LOG()
@@ -593,6 +601,8 @@ void Ssnppl_demonstrator::init_SPARTN_LOG()
 
 Ssnppl_demonstrator::~Ssnppl_demonstrator()
 {
+    thread_running = false;
+
     // Stop MQTT
     if (mosq_client != nullptr)
     {
@@ -602,4 +612,9 @@ Ssnppl_demonstrator::~Ssnppl_demonstrator()
 
     if (SPARTN_file_Ip.is_open()) SPARTN_file_Ip.close();
     if (SPARTN_file_Lb.is_open()) SPARTN_file_Lb.close();
+
+
+    read_ephemeris_gga_data_thread.join();
+    read_lband_data_thread.join();
+    write_rtcm_thread.join();
 }

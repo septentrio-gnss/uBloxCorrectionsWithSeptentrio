@@ -61,6 +61,8 @@ private:
     std::string keyInfo = "";
 
     std::atomic<bool> update_receiver{false};
+    std::atomic<bool> thread_running{true};
+
 
     ssnppl_error init_option(int argc, char *argv[]);
     void init_receiver();
@@ -68,9 +70,7 @@ private:
 
     // Serial Port
     SerialPort main_channel;
-    std::mutex main_channel_mutex;
     SerialPort lband_channel;
-    std::mutex lband_channel_mutex;
 
     // Ephemeris GGA thread
     void read_ephemeris_gga_data();
@@ -117,7 +117,7 @@ public:
 
     // Init func
     ssnppl_error init(int argc, char *argv[]);
-    ssnppl_error dispatch_forever();
+    ssnppl_error dispatch();
 };
 
 #endif
