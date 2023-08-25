@@ -282,7 +282,7 @@ void Ssnppl_demonstrator::handle_data()
                 if ((ePPLRet) == ePPL_Success)
                 {
                     PPL_GetRTCMOutput(rtcm_buffer.data(), PPL_MAX_RTCM_BUFFER, &rtcm_size);
-                    if (!is_empty(rtcm_buffer.data(), rtcm_size))
+                    if (rtcm_size>0)
                     {
                         std::unique_lock<std::mutex> lock(rtcm_queue_mutex);
                         rtcm_queue.push(std::vector<uint8_t>(rtcm_buffer.begin(), rtcm_buffer.begin() + rtcm_size));
@@ -338,7 +338,8 @@ void Ssnppl_demonstrator::handle_data()
                 uint32_t rtcm_size = 0;
 
                 PPL_GetRTCMOutput(rtcm_buffer.data(), PPL_MAX_RTCM_BUFFER, &rtcm_size);
-                if (!is_empty(rtcm_buffer.data(), rtcm_size))
+
+                if (rtcm_size>0)
                 {
                     std::unique_lock<std::mutex> mutex(rtcm_queue_mutex);
                     rtcm_queue.push(std::vector<uint8_t>(rtcm_buffer.begin(), rtcm_buffer.begin() + rtcm_size));
