@@ -334,9 +334,8 @@ void Ssnppl_demonstrator::handle_data()
             }
             else
             {
-                // std::cout << "LBand Received. Size:" << msg.size() << std::endl;
                 std::array<uint8_t, PPL_MAX_RTCM_BUFFER> rtcm_buffer;
-                uint32_t rtcm_size;
+                uint32_t rtcm_size = 0;
 
                 PPL_GetRTCMOutput(rtcm_buffer.data(), PPL_MAX_RTCM_BUFFER, &rtcm_size);
                 if (!is_empty(rtcm_buffer.data(), rtcm_size))
@@ -542,7 +541,7 @@ void Ssnppl_demonstrator::read_lband_data()
 
         lband_channel.clearSyncBuffer();
         cv_incoming_data.notify_all();
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
     }
 }
 
@@ -564,7 +563,7 @@ void Ssnppl_demonstrator::read_ephemeris_gga_data()
 
         main_channel.clearSyncBuffer();
         cv_incoming_data.notify_all();
-        std::this_thread::sleep_for(std::chrono::seconds(3));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 }
 

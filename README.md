@@ -19,6 +19,7 @@ To address this challenge, it is useful to create an ecosystem around GNSS corre
 |------|--------|
 | Iker Uranga | <a href="https://github.com/IkerUranga10">IkerUranga10</a> </br> |    
 | Duck Jiang | <a href="https://github.com/duckjiang">duckjiang</a> </br> | 
+| Luc Gousset | <a href="https://github.com/Luc-Gousset">Luc-Gousset</a> </br> |  
 
 ## MAINTAINER
   
