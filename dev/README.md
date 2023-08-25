@@ -159,7 +159,7 @@ To download the code, simply clone this repository, since the cluecode is locate
 ```
 git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio.git
 ```  
-For obtaining the PointPerfect library please consult uBlox. Then put it in the pp folder inside include directory and make sure that the path to it is correct.
+For obtaining the PointPerfect library please consult uBlox. Then put it in the PPL folder inside include directory and make sure that the path to it is correct.
 
 ## LIST OF PARAMETERS
 
@@ -245,14 +245,14 @@ Navigate to src folder and run:
 
 RUN WITH MQTT - (With Basic options)
 ```
-./ssnppl_demonstrator/ssnppl_demonstrator --mode Ip \
+./ssnppl_demonstrator --mode Ip \
 --main_comm USB --main_config /dev/ttyACM0@115200 \
 --client_id <your_client_ID_here> 
 ```
 
 RUN WITH LBAND - (With Basic options)
 ```
-./ssnppl_demonstrator/ssnppl_demonstrator --mode Lb --main_comm USB --main_config /dev/ttyACM0@115200 \
+./ssnppl_demonstrator --mode Lb --main_comm USB --main_config /dev/ttyACM0@115200 \
 --lband_comm USB --lband_config /dev/ttyACM1@115200 \
 --client_id <your_client_ID_here>
 ```
