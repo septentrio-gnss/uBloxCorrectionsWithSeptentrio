@@ -85,6 +85,10 @@ Therefore, the **selection of the SPARTN data source conditions some elements of
 
 Thus, from now on we will refer to two modes of operation, these are **LBand Mode** and **MQTT Mode**. The selection and configuration of these operating modes is done through the different execution parameters of the compiled code, as described in the <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/blob/master/user/README.md#list-of-parameters">parameter list section</a>.
 
+# Precompiled binary
+
+If you want to try the dmonstrator without having to compile the source code, a precompiled version is available for a rapsberry pi 64bit  under the folder **ssnppl_demonstrator/raspberry-build**.
+
 # How to run the demonstrator
   
 ## Step 1: Install code dependencies
