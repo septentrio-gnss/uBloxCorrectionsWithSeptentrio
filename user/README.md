@@ -87,7 +87,7 @@ Thus, from now on we will refer to two modes of operation, these are **LBand Mod
 
 # Precompiled binary
 
-If you want to try the dmonstrator without having to compile the source code, a precompiled version is available for a rapsberry pi 64bit  under the folder **ssnppl_demonstrator/raspberry-build**.
+If you want to try the dmonstrator without having to compile the source code, a precompiled version is available for a rapsberry pi 32bit abd 64bit  under the folder **ssnppl_demonstrator/raspberry-build**.
 
 # How to run the demonstrator
   
