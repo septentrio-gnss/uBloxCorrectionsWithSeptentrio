@@ -75,7 +75,7 @@ This documentation is a user implementation guide for integrating PointPerfect c
 
 This way any user who has such a setup ready can start using and testing the corrections.
 
-However, the ultimate goal of the guide is to provide an example of integration to a similar system that works with a septentrial receiver, in this case Mosaic-Go, and with an external CPU, in this case the Raspberry Pi 4.
+However, the ultimate goal of the guide is to provide an example of integration to a similar system that works with a Septentrio receiver, in this case Mosaic-Go, and with an external CPU, in this case the Raspberry Pi 4.
 
 ## DIFFERENT OPERATING MODES
 
@@ -87,7 +87,27 @@ Thus, from now on we will refer to two modes of operation, these are **LBand Mod
 
 # Precompiled binary
 
-If you want to try the dmonstrator without having to compile the source code, a precompiled version is available for a rapsberry pi 32bit abd 64bit  under the folder **ssnppl_demonstrator/raspberry-build**.
+If you want to try the demonstrator without having to compile the source code, a precompiled version is available for a rapsberry pi 32bit abd 64bit  under the folder **ssnppl_demonstrator/raspberry-build** .
+
+To use one of the precompiled version, copy the precompile binary that you want to use in the folder *ssnppl_demonstrator/* .
+
+Afterward, follow [step 4](#step-4-add-the-files-for-mqtt-authentification) of the following Guide.
+If done correctly you should have something as follow :
+```bash
+ssnppl_demonstrator
+|-- auth 
+|   |-- AmazonRootCA1.pem
+|   |-- device-XXXXXXX-pp-cert.crt 
+|   `-- device-XXXXXXX-pp-key.pem
+|-- CMakeLists.txt
+|-- include
+|-- PPL
+|-- raspberry-build
+|-- src
+`-- ssnppl_demonstrator_64bit
+```
+To run the precompiled binary folow the instruction [step 5](#step-5-run-the-demonstrator)
+
 
 # How to run the demonstrator
   
@@ -141,6 +161,10 @@ git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio.git
 ``` 
   
 Now, copy the *inc* and *lib* folder from the PointPerfect library to the folder *ssnppl_demonstrator/ppl*
+
+A copy of the *inc* and *lib* folder is available for raspberry pi 32bit and 64bit in the folder *raspberry-build* 
+
+*Note : This is not a distribution channel for the SDK , if you need informations about the library please contact uBlox*
 
 ## Step 3: Compile the source code
 
