@@ -159,7 +159,7 @@ To download the code, simply clone this repository, since the cluecode is locate
 ```
 git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio.git
 ```  
-For obtaining the PointPerfect library please consult uBlox. Then put it in the PPL folder inside include directory and make sure that the path to it is correct.
+For the library, the files used for compilation for Raspberry 32-bit and 64-bit platforms are available in the 'raspberry-build' directory. To obtain the library in its complete version or for further information about it, please contact uBlox. After obtaining the library, put it in the PPL folder inside include directory and make sure that the path to it is correct.
 
 ## LIST OF PARAMETERS
 
