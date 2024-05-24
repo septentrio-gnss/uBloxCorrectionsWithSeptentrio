@@ -4,11 +4,11 @@
 
 ## GENERAL CONTEXT OF THIS GUIDE
 
-GNSS (Global Navigation Satellite System) technology has changed the way we navigate and position ourselves, with applications in various industries including transportation, surveying and agriculture. However, atmospheric conditions and signal blockages can affect the accuracy of GNSS location information. 
+GNSS (Global Navigation Satellite System) technology has changed the way we navigate and position ourselves, with applications in various industries including transportation, surveying, and agriculture. However, atmospheric conditions and signal blockages can affect the accuracy of GNSS location information.
 
-GNSS corrections are used to mitigate these effects and improve the accuracy of position measurements. In recent years, there has been a growing demand for high-accuracy positioning, which has led to the evolution of GNSS correction mechanisms such as OSR, SSR or LBand delivery. Standardization is not yet established, making it challenging for users to access and use these corrections. 
+GNSS corrections are used to mitigate these effects and improve the accuracy of position measurements. In recent years, there has been a growing demand for high-accuracy positioning, which has led to the evolution of GNSS correction mechanisms such as OSR, SSR, or L-Band delivery. Standardization is not yet established, making it challenging for users to access and use these corrections.
 
-To address this challenge, it is useful to create an ecosystem around GNSS corrections that is agnostic. This repository is part of a set of guides and documentation and explores a way of running uBlox's Point Perfect corrections on your system quickly. Making it easy for users/integrators to evaluate and access these service. Platforms like Github enable documentation and the creation of demonstrators to allow users to try out different correction services with ease.
+To address this challenge, it is useful to create an ecosystem around GNSS corrections that is agnostic. This repository is part of a set of guides and documentation and explores a way of running u-blox's PointPerfect corrections on your system quickly, making it easy for users and integrators to evaluate and access these services. Platforms like GitHub enable documentation and the creation of demonstrators to allow users to try out different correction services with ease.
 
 | <a href="https://github.com/septentrio-gnss/Septentrio_AgnosticCorrectionsProgram#set-up-guide-to-use-third-party-osr-and-ssr-correction-services-with-septentrios-receivers-for-precise-positioning">To access the GitHub homepage to which this guide belongs, click here</a>|
 |---|
@@ -40,9 +40,9 @@ To address this challenge, it is useful to create an ecosystem around GNSS corre
 
 ## DISCLAIMER
   
-This set of guidelines consist of a several practical examplse to help Septentrio Module users and developers to integrate third party GNSS corrections. The guidelines are based on a concrete setup, which you may or may not use to follow the integration guidelines.
+This set of guidelines consists of several practical examples to help Septentrio Module users and developers integrate third-party GNSS corrections. The guidelines are based on a concrete setup, which you may or may not use to follow the integration guidelines.
 
-It is desirable to mention the disclaimer about that setup and the guides in general before starting reading this guide.
+It is desirable to mention the disclaimer about that setup and the guides in general before starting to read this guide.
   
 | <a href="https://github.com/septentrio-gnss/Septentrio_AgnosticCorrectionsProgram/tree/main/Receiver%20and%20Raspberry%20Setup#disclaimer">Click here to know more about the Setup in which these guides are based and general implementation documentation disclaimer</a> |
 |---|
@@ -71,7 +71,15 @@ It is desirable to mention the disclaimer about that setup and the guides in gen
 
 ## INTRODUCTION
 
-This repository consists in a how-to guide for the implementation of a system that uses a Raspberry Pi 4 Model B in combination with a Septentrio Module to obtain uBlox's Pointperfect corrections for precise positioning. If you want to know more about or different modules and products you can visit us in: 
+This repository consists in a how-to guide for the implementation of a system that uses a Raspberry Pi 4 Model B in combination with a Septentrio Module to obtain uBlox's Pointperfect corrections for precise positioning.
+<div align="center">
+
+| <a href="https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio/tree/master/user">Click here to try our User implemetation.</a> |
+|---|
+   
+</div>
+
+If you want to know more about or different modules and products you can visit us in: 
 
 <div align="center">
 
@@ -86,15 +94,14 @@ If you have any questions or feedback, please don't hesitate to reach out to us 
 
 ## WHO IS UBLOX?
 
-A lot of companies are developing and distributing chips and modules for wireless communication and positioning. But u-blox is dedicated to do it in an excellent way and with the focus on the customers and their applications. Therefore we are a fabless company, heavily investing in R&D to provide the market with products and solutions for the Internet of Things - and everybody in the world.
-
+Many companies are involved in developing and distributing chips and modules for wireless communication and positioning. However, u-blox stands out by dedicating itself to excellence, focusing on customers and their specific applications. As a fabless company, u-blox invests heavily in research and development to offer the market products and solutions tailored for the Internet of Things - benefitting users worldwide.
 
 ## WHAT IS POINTPERFECT?
   
 <p align="center">
     <img src="doc_sources/pointperfect_logo.png" width="45%">
 
-PointPerfect is an advanced GNSS augmentation data service designed from the ground up to be accurate, reliable, and immediately available. The service answers the fast-growing demand for high precision GNSS solutions including autonomous vehicles such as unmanned aerial vehicles (UAV), service robots, machinery automation, micro-mobility, and other advanced navigation applications. Emerging automotive applications include automated driving (AD) and advanced driver assistance system (ADAS), lane-accurate navigation, and telematics. 
+PointPerfect is an advanced GNSS augmentation data service meticulously designed to deliver accuracy, reliability, and immediate availability. The service meets the rapidly increasing demand for high-precision GNSS solutions across various sectors, including autonomous vehicles such as unmanned aerial vehicles (UAVs), service robots, machinery automation, micro-mobility, and other cutting-edge navigation applications. In the automotive realm, emerging applications encompass automated driving (AD), advanced driver assistance systems (ADAS), lane-accurate navigation, and telematics.
 
 To know more about the service you can visit the following official web pages:
 
@@ -122,8 +129,7 @@ More info about licensing can be found here:
 
 ## RECEIVER AND RASPBERRY PI 4 SETUP
 
-The implementation of this service is based and tested on a specific setup. This setup consists of two main elements and their wiring and peripherals. These elements are the Mosaic-Go Module evaluation kit and a Raspberry Pi 4 Model B. Here you can see some of the main components (without peripherials) and a Higl-Level scheme of the Raspberry Pi 4 and Mosaic-Go system.
-
+The implementation of this service is based and tested on a specific setup. This setup consists of two main elements and their wiring and peripherals. These elements are the Mosaic-Go Module evaluation kit and a Raspberry Pi 4 Model B. Here you can see some of the main components (without peripherals) and a High-Level scheme of the Raspberry Pi 4 and Mosaic-Go system.
 <p align="center">
     <img src="doc_sources/high_level_setup.PNG" width="100%">
 
@@ -155,7 +161,7 @@ For convenience, from now on the acronym 'PPL' will be used in several occasions
 <p align="center">
     <img src="doc_sources/mqtt.png" width="65%">
     
-Before starting the explanation of the different inputs and outputs that the library has, it is essential to explain, or at least mention the IoT communication protocol called MQTT. This protocol plays a crucial role in accessing the information needed by the library.
+Before starting the explanation of the different inputs and outputs that the library has, it is essential to explain, or at least mention, the IoT communication protocol called MQTT. This protocol plays a crucial role in accessing the information needed by the library.
 
 <div align="center">
     
@@ -165,8 +171,8 @@ Before starting the explanation of the different inputs and outputs that the lib
 </div>
 
 MQTT is an OASIS standard messaging protocol for the Internet of Things (IoT). It is designed as an extremely lightweight publish/subscribe messaging transport that is ideal for connecting remote devices with a small code footprint and minimal network bandwidth. MQTT today is used in a wide variety of industries, such as automotive, manufacturing, telecommunications, oil and gas, etc.
-  
-Below is an image showing a basic schematic of the operation of the subscription and publication system between brokers and MQTT clients to communicate between two or more clients in the network. 
+
+Below is an image showing a basic schematic of the operation of the subscription and publication system between brokers and MQTT clients to communicate between two or more clients in the network.
 
 Click here to navigate to the official MQTT guide for Client and Broker communication:
   
@@ -182,9 +188,9 @@ Click here to navigate to the official MQTT guide for Client and Broker communic
 
 ### Point Perfect Library
 
-Point Perfct is a C++ library developed by uBlox that generates corrections in RTCM format to later send them to the GNSS receiver. The library decodes the SPARTN format corrections offered by the IoT location service or LBand satellite beam and together with the Satellite Ephemeris and receiver's position and timing information (NMEA), it generates RTCM messages to be sent to the receiver.
-  
-As far as the data inputs and outputs of the library are concerned, there are two more elements that are crucial to make the library workable. These elements are the frequency of the lband beam and a dynamic key (which changes over time) for library authentication. Both are obtained from the MQTT client.
+Point Perfect is a C++ library developed by u-blox that generates corrections in RTCM format to later send them to the GNSS receiver. The library decodes the SPARTN format corrections offered by the IoT location service or L-Band satellite beam. Together with the Satellite Ephemeris and receiver's position and timing information (NMEA), it generates RTCM messages to be sent to the receiver.
+
+Regarding the data inputs and outputs of the library, two additional elements are crucial to make the library functional. These elements are the frequency of the L-Band beam and a dynamic key (which changes over time) for library authentication. Both are obtained from the MQTT client.
   
 Below is an image with a schematic representing the different inputs and outputs of the Point Perfect library.
 
@@ -211,7 +217,7 @@ In order to understand the role of the GlueCode in the system, the following fig
 <p align="center">
         <img src="doc_sources/gluecode.jpg" width="70%">
         
-It can be seen in the figure that the gluecode wraps the PointPerfect library so that all the elements of the system are well interconnected, i.e., the serial port communication between the receiver and the Raspberry Pi 4, the communication through the previously described MQTT protocol and Raspberry Pi 4, and the interface with the Point Perfect library.
+It can be observed in the figure that the glue code wraps the PointPerfect library, ensuring that all elements of the system are well interconnected. This includes serial port communication between the receiver and the Raspberry Pi 4, communication through the MQTT protocol and Raspberry Pi 4 as previously described, and interface with the Point Perfect library.
 
 In the following sub-sections, two approaches for such implementation are presented. These are **User Implementation**, with the aim of providing a high-level explanation for easy and fast execution of the code, in order to start testing the library with Septentrio receivers quickly, and the other one, 
   

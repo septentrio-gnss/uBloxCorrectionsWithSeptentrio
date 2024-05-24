@@ -60,7 +60,7 @@ We would like you to mention our disclaimer about that setup and the guides in g
 
 ## INTRODUCTION
 
-This documentation is a user implementation guide for integrating PointPerfect correction services into an example system setup based on Mosaic-Go + Raspberry Pi 4. The guide to set up this setup is documented in the link below. It is a sample guide so that you can implement your own based on this system or other similar systems should you wish to do so. On Septentrio's side, only tests have been done with this setup.
+This documentation serves as a user implementation guide for integrating PointPerfect correction services into an example system setup based on Mosaic-Go + Raspberry Pi 4. The guide for setting up this configuration is documented in the link below. It serves as a sample guide for implementing your own setup based on this system or other similar systems if desired. Please note that tests have only been conducted with this setup on Septentrio's side.
 
 <div align="center">
 

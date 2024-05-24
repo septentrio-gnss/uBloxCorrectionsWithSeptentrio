@@ -16,7 +16,7 @@
 |----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
 | <a href="https://web.septentrio.com/GH-SSN-support ">Septentrio Support Page</a> | <a href="https://web.septentrio.com/GH-SSN-contact ">Septentrio Contact Page</a> | <a href="https://web.septentrio.com/UBL-SSN-home">Septentrio Home Page</a> |
 
-This guide is part of a collection of documentation on integration and implementation of third party correction services with Septentrio receivers for high accuracy positioning. This collection of documentation is intended to provide our customers with **practical examples of how they can integrate the correction services they use or want to use** with their positioning system containing a SepteSeptentriontry module. Also, all these guides are based on implementing them in the same setup example that you can see in <a href="https://github.com/septentrio-gnss/Septentrio_AgnosticCorrectionsProgram/tree/main/Receiver%20and%20Raspberry%20Setup#set-up-guide-to-use-third-parties-corrections-with-septentrios-receiver-for-precise-positioning">this section</a>.
+This guide is part of a collection of documentation on the integration and implementation of third-party correction services with Septentrio receivers for high-accuracy positioning. The aim of this collection is to provide our customers with practical examples of how they can integrate the correction services they use or want to use with their positioning system containing a Septentrio module. Additionally, all these guides are based on implementing them in the same setup example, which you can find in [this section](https://github.com/septentrio-gnss/Septentrio_AgnosticCorrectionsProgram/tree/main/Receiver%20and%20Raspberry%20Setup#set-up-guide-to-use-third-parties-corrections-with-septentrios-receiver-for-precise-positioning).
 
 | <a href="https://github.com/septentrio-gnss/Septentrio_AgnosticCorrectionsProgram#set-up-guide-to-use-third-party-osr-and-ssr-correction-services-with-septentrios-receivers-for-precise-positioning">To access the main GitHub page for this collection of documentation click on this link</a> |
 |---|
@@ -26,7 +26,7 @@ This guide is part of a collection of documentation on integration and implement
   
 ## DISCLAIMER
   
-As discussed above, this set of guidelines are a practical example to help Septentrio Module users and developers to integrate third party fixes. The guidelines are based on a concrete setup, which you may or may not use to follow the guidelines.
+As discussed above, this set of guidelines provides a practical example to assist Septentrio Module users and developers in integrating third-party corrections. The guidelines are based on a specific setup, which you may or may not use as a reference to follow the instructions.
 
 We would like you to mention our disclaimer about that setup and the guides in general before starting reading this guide.
   
@@ -64,7 +64,7 @@ See [LICENCE](../LICENSE)
 
 ## INTRODUCTION
 
-This documentation is a user implementation guide for integrating PointPerfect correction services into an example system setup based on Mosaic-Go + Raspberry Pi 4. The guide to set up this setup is documented in the link below. It is a sample guide so that you can implement your own based on this system or other similar systems should you wish to do so. On Septentrio's side only tests have been done with this setup.
+This documentation serves as a user implementation guide for integrating PointPerfect correction services into an example system setup based on Mosaic-Go + Raspberry Pi 4. The guide for setting up this configuration is documented in the link below. It serves as a sample guide for implementing your own setup based on this system or other similar systems if desired. Please note that tests have only been conducted with this setup on Septentrio's side.
 
 <div align="center">
 
@@ -87,12 +87,12 @@ Thus, from now on we will refer to two modes of operation, these are **LBand Mod
 
 # Precompiled binary
 
-If you want to try the demonstrator without having to compile the source code, a precompiled version is available for a rapsberry pi 32bit abd 64bit  under the folder **ssnppl_demonstrator/raspberry-build** .
+If you wish to try the demonstrator without the need to compile the source code, a precompiled version is available for both Raspberry Pi 32-bit and 64-bit systems, located in the designated folder : **ssnppl_demonstrator/raspberry-build** .
 
-To use one of the precompiled version, copy the precompile binary that you want to use in the folder *ssnppl_demonstrator/* .
+To utilize one of the precompiled versions, simply copy the desired precompiled binary into the folder *ssnppl_demonstrator/*.
 
-Afterward, follow [step 4](#step-4-add-the-files-for-mqtt-authentification) of the following Guide.
-If done correctly you should have something as follow :
+Then, proceed to [step 4](#step-4-add-the-files-for-mqtt-authentification) of the following Guide.
+If completed successfully, you should have something like the following:
 ```bash
 ssnppl_demonstrator
 |-- auth 
@@ -106,7 +106,7 @@ ssnppl_demonstrator
 |-- src
 `-- ssnppl_demonstrator_64bit
 ```
-To run the precompiled binary folow the instruction [step 5](#step-5-run-the-demonstrator)
+To execute the precompiled binary, follow the instructions in [step 5](#step-5-run-the-demonstrator).
 
 
 # How to run the demonstrator
@@ -154,21 +154,21 @@ Additionally, PointPerfect library is also a dependency. To obtain the PointPerf
 
 ## Step 2: Download the source code and add the PointPerfect library
   
-To download the code, simply clone this repository, since the source code is located inside it, specifically in the folder called 'ssnppl_demonstrator'. To clone the repository, enter the following command in the terminal:
+To download the code, simply clone this repository, as the source code is located inside it, specifically in the folder named 'ssnppl_demonstrator'. To clone the repository, enter the following command in the terminal:
   
 ```
 git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio.git
 ``` 
   
-Now, copy the *inc* and *lib* folder from the PointPerfect library to the folder *ssnppl_demonstrator/ppl*
+Now, copy the *inc* and *lib* folders from the PointPerfect library to the folder *ssnppl_demonstrator/ppl*.
 
-A copy of the *inc* and *lib* folder is available for raspberry pi 32bit and 64bit in the folder *raspberry-build* 
+A copy of the *inc* and *lib* folders is available for Raspberry Pi 32-bit and 64-bit in the folder *raspberry-build*.
 
-*Note : This is not a distribution channel for the SDK , if you need informations about the library please contact uBlox*
+*Note: This is not a distribution channel for the SDK. If you need information about the library, please contact u-blox.*
 
 ## Step 3: Compile the source code
 
-To compile the code, just navigate to the ssnppl_demonstrator folder and execute the following command:
+To compile the code, navigate to the ssnppl_demonstrator folder and execute the following command:
 
 ```
 cmake .
@@ -244,7 +244,7 @@ These are of general purpose, and serve to establish the behavior of the program
   
 </div>
  
-These parameters define whether SPARTN data logging is to be performed from the SPARTN data source (MQTT or LBand) or from the receiver status information via NMEA or SBF (Septentrio Binary Format) message types.
+These parameters define whether SPARTN data logging is to be performed from the SPARTN data source (MQTT or L-Band) or from the receiver status information via NMEA or SBF (Septentrio Binary Format) message types.
   
 ### Serial communication parameter list
 
@@ -259,7 +259,7 @@ These parameters define whether SPARTN data logging is to be performed from the 
   
 </div>
 
-These parameters are used to configure the serial communication with the receiver. The main channel is mandatory but the LBand channel is required only if the selected operating mode is LBand Mode.
+These parameters are used to configure the serial communication with the receiver. The main channel is mandatory, but the L-Band channel is required only if the selected operating mode is L-Band Mode.
   
 ### MQTT Configuration parameter list 
 
@@ -273,15 +273,11 @@ These parameters are used to configure the serial communication with the receive
 
 </div>
 
-These parameters are used to configure the MQTT client. Normally only the client ID, obtained from the thingstream platform, is required.
+These parameters are used to configure the MQTT client. Normally, only the client ID obtained from the Thingstream platform is required.
     
-
-
-
 ## FURTHER INFORMATION
 
-If you want to know more details about how the code works, you can visit the documentation for developers:
-(Part of the information provided in this guide [user documentation] is repeated in developers documentation.)
+If you want more details about how the code works, you can visit the developer documentation. Note that part of the information provided in this guide for users is repeated in the developer documentation.
 
 
 <div align="center">
