@@ -36,6 +36,12 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
+#include <cmath>
+
+constexpr float EARTHRADIUS{6371.0};
+constexpr float radians(const float degree){return (degree *(M_PI/180));} ; 
+
+
 void echo(const std::string &msg, bool echo_mode);
 
 std::vector<std::string> split(const std::string &str, char separator);
@@ -45,5 +51,9 @@ bool is_empty(const uint8_t *arr, std::size_t size);
 unsigned int getbitu(const unsigned char *buff, int pos, int len);
 
 std::vector<int> identifyRTCM3MessageIDs(const uint8_t *buffer, size_t bufferSize);
+
+float distance_between_locations(const float lat1 , const float lon1 ,const float lat2 , const float lon2);
+
+float NMEAToDecimal(const std::string& Coord , const std::string& Direction) noexcept;
 
 #endif

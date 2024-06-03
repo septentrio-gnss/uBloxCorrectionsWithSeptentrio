@@ -64,9 +64,13 @@ ProgramOptions ParseProgramOptions(int argc, char* argv[]) {
         ("client_id", po::value<std::string>(&options.client_id)->required(),                                   "client_id:                 Required | Your client id")
         ("mqtt_server", po::value<std::string>(&options.mqtt_server)->default_value("pp.services.u-blox.com"),  "mqtt_server                Optional | By Default: pp.services.u-blox.com")
         ("region", po::value<std::string>(&options.region)->default_value("eu"),                                "region                     Optional | By Default: eu")
-        ("mqtt_auth_folder", po::value<std::string>(&options.mqtt_auth_folder)->default_value("auth"),           "mqtt_auth_folder:         Optional | Path to auth folder, By default : current folder");
-
-
+        ("mqtt_auth_folder", po::value<std::string>(&options.mqtt_auth_folder)->default_value("auth"),           "mqtt_auth_folder:         Optional | Path to auth folder, By default : current folder")
+        
+        // Localized Distribution Config 
+        ("localized", po::value<bool>(&options.localized)->default_value(false),                                "localized                  Optional | Use Localized services , By Default: false")
+        ("tile_level",po::value<int>(&options.tile_level)->default_value(2),                                    "tile_level:                Optional | Tile level for localized service (0,1,2) , By default : 2 ")
+        ("distance",po::value<int>(&options.distance)->default_value(10000),                                    "distance:                  Optional | The distance threshold [m] for recalculating tile and node , By default : 10000 ");
+        
     po::variables_map vm;
 
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -100,7 +104,12 @@ void showOptions(const ProgramOptions &options) {
     std::cout << "  *timer:                 ";
     if(options.timer > 0) std::cout << options.timer << " Seconds" << std::endl;
     else std::cout << "Disabled" << std::endl;
-
+    std::cout << "  *Localized services     ";
+    if(options.localized == true) {std::cout << "Enabled" << std::endl;
+    std::cout << "  *Tile Level             " << options.tile_level << std::endl;
+    std::cout << "  *Distance               " << options.distance << std::endl ;
+    }else
+    std::cout << "Disabled" << std::endl;
     std::cout << "\nLOGING OPTIONS:\n" << std::endl;
     std::cout << "  *SPARTN_Logging:        " << options.SPARTN_Logging << std::endl;
     std::cout << "  *logging:               " << options.logging << std::endl;

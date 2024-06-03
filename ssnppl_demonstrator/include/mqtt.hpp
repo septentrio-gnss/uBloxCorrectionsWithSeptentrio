@@ -55,8 +55,11 @@ struct mqttMessgae {
 typedef struct {
 
     // Program Logic Mode
+    bool localized ;
+    
     std::string corrections_mode;
     std::string region;
+    std::string mqttServer ; 
 
     // Dynamic Key MQTT Info
     const std::string keyTopic = "/pp/key/Lb"; //"/pp/key/Lb";
@@ -69,6 +72,14 @@ typedef struct {
     // SPARTN MQTT Info
     const std::string corrTopic = "/pp/Lb/eu";
     const int corrQoS = 0;
+
+    // Current Tile Topic MQTT
+    std::string tileTopic =""  ;
+    const int tileQoS = 0 ;
+
+    // Current Node Topic MQTT
+    std::string nodeTopic = "" ;
+    const int nodeQoS = 0 ;
 
     //PPL
     std::queue<struct mqttMessgae> message_queue;
