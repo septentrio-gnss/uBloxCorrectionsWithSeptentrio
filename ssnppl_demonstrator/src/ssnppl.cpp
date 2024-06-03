@@ -211,14 +211,14 @@ ssnppl_error Ssnppl_demonstrator::init_mqtt()
 }
 ssnppl_error Ssnppl_demonstrator::switch_mqtt_server(std::string new_mqtt_server){
 
-    std::cout<<"Stoping" <<std::endl  ;
+    std::cout<<"\nStop main loop of Mosquitto client" <<std::endl  ;
      int ret = mosquitto_loop_stop(mosq_client,true);
     if (ret != MOSQ_ERR_SUCCESS)
     {
         std::cerr << "Failed to stop main loop of Mosquitto client: " << ret << std::endl;
         return ssnppl_error::MQTT_ERROR;
     }
-    std::cout<< "Disconnected from old MQTT broker" <<std::endl;
+    std::cout<< " \nDisconnected from old MQTT broker : " << userData.mqttServer <<std::endl;
     ret = mosquitto_disconnect(mosq_client);
     if (ret != MOSQ_ERR_SUCCESS)
     {
@@ -229,6 +229,7 @@ ssnppl_error Ssnppl_demonstrator::switch_mqtt_server(std::string new_mqtt_server
     const int mqtt_keepalive = 10;
     const int mqtt_port = 8883;
 
+    std::cout << "\nConnect to new MQTT broker : " << new_mqtt_server  << std::endl ;
      ret = mosquitto_connect(mosq_client, new_mqtt_server.c_str(), mqtt_port, mqtt_keepalive);
     if (ret != MOSQ_ERR_SUCCESS)
     {
@@ -348,11 +349,11 @@ void Ssnppl_demonstrator::handle_data()
                     if (json["endpoint"] != userData.mqttServer){
                         
                         userData.nodeTopic = new_Node_Topic();
-
-                        std::cout << "Switching MQTT Server to : " <<json["endpoint"]<<std::endl;
+                        std::cout << "\nSwitching MQTT Server to : " <<json["endpoint"]<<std::endl;
                         int ret = switch_mqtt_server(json["endpoint"]);
                         if(ret != ssnppl_error::SUCCESS){
                             std::cout << "Failed to switch MQTT Server" <<std::endl;
+                        }else{
                         }
                     }else{
                         process_new_position();
@@ -717,7 +718,7 @@ Ssnppl_demonstrator::~Ssnppl_demonstrator()
 }
 
 
-// Localized Distribution 
+// Localized Distribution Functions
 
 
 void Ssnppl_demonstrator::process_new_position () noexcept

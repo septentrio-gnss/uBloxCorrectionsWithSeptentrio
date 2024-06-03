@@ -34,7 +34,6 @@
 
 
 void mqtt_on_connect(struct mosquitto *mqttClient, void *userdata, int result) {
-    std::cout<<"hey"<<std::endl;
     if (result == 0) {
         std::cout << "Connected to broker.\n\nSubscribing to topics ... \n" << std::endl;
 

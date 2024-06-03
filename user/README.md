@@ -274,6 +274,17 @@ These parameters are used to configure the serial communication with the receive
 </div>
 
 These parameters are used to configure the MQTT client. Normally, only the client ID obtained from the Thingstream platform is required.
+
+### Localized Distribution parameter list
+<div align="center">
+
+| **Name / Label** |     **Definition**     |       Default Values       |                **Possible Values**               |           **Example**          | **Required** |
+|:----------------:|:----------------------:|:--------------------------:|:------------------------------------------------:|:------------------------------:|:------------:|
+|     localized    | enable localized distribution |    **off**    |               on / off , true / false               | --localized on |    **NO**   |
+|    tile_level   | Set the tile level of the localized    | **2** |               0 , 1 or 2               | --tile_level 0 |    **NO**    |
+|      distance      | Set the distance threshold  in meter|           **10000**           | any value |           --distance 1000       |    **NO**    |
+
+</div>
     
 ## FURTHER INFORMATION
 
