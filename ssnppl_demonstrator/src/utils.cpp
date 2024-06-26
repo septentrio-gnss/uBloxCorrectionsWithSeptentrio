@@ -99,7 +99,7 @@ std::vector<int> identifyRTCM3MessageIDs(const uint8_t *buffer, size_t bufferSiz
   return res;
 }
 
-float distance_between_locations( float lat1 ,  float lon1 , float lat2 ,  float lon2)
+float distanceBetweenLocations( float lat1 ,  float lon1 , float lat2 ,  float lon2)
 {
     lat1 = radians(lat1);
     lon1 = radians(lon1);
@@ -121,8 +121,15 @@ float distance_between_locations( float lat1 ,  float lon1 , float lat2 ,  float
 
 float NMEAToDecimal(const std::string& Coord , const std::string& Direction) noexcept
 {
-    float degree = std::stof(Coord.substr(0,2));
-    float minute = std::stof(Coord.substr(2));
+  float degree , minute ; 
+  if (Direction =="E" || Direction =="W"){
+    degree = std::stof(Coord.substr(0,3));
+    minute = std::stof(Coord.substr(3));
+  }else
+  {
+    degree = std::stof(Coord.substr(0,2));
+    minute = std::stof(Coord.substr(2));
+  }
     float decimal = degree + minute / 60.0 ;
     if (Direction =="S" || Direction == "W"){
         decimal = -decimal ;

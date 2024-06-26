@@ -209,6 +209,12 @@ RUN WITH LBAND - (With Basic options)
 --client_id <your_client_ID_here>
 ```
 
+RUN WITH LOCALIZED - (With Basic options)
+```
+./ssnppl_demonstrator --mode Ip \
+--main_comm USB --main_config /dev/ttyACM0@115200 \
+--client_id <your_client_ID_here> --localized on 
+```
 
 ## LIST OF PARAMETERS
 

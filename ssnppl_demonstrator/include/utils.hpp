@@ -52,7 +52,7 @@ unsigned int getbitu(const unsigned char *buff, int pos, int len);
 
 std::vector<int> identifyRTCM3MessageIDs(const uint8_t *buffer, size_t bufferSize);
 
-float distance_between_locations(const float lat1 , const float lon1 ,const float lat2 , const float lon2);
+float distanceBetweenLocations(const float lat1 , const float lon1 ,const float lat2 , const float lon2);
 
 float NMEAToDecimal(const std::string& Coord , const std::string& Direction) noexcept;
 

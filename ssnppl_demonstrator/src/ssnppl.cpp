@@ -255,7 +255,7 @@ void Ssnppl_demonstrator::handle_data()
     std::unique_lock<std::mutex> mutex{lk_incoming_data};
     // Wait for signal of new data (MQTT or LBAND or GGA/EPH)
     cv_incoming_data.wait(lk_incoming_data);
-
+  
     // Handle MQTT
     {
         std::lock_guard<std::mutex> lock(userData.message_queue_mutex);
@@ -340,21 +340,26 @@ void Ssnppl_demonstrator::handle_data()
             }
             else if (message.topic == userData.tileTopic)
             {
+                    // Parse Payload to get all the node available in the tile
                     nlohmann::json json = nlohmann::json::parse(message.payload);
                     this->nodeprefix = json["nodeprefix"];
+
+                    // Replace the previous node with new ones
                     this->tile_dict.clear();
                     for(int i = 0 ; i < json["nodes"].size();i++){
                         this->tile_dict.push_back(json["nodes"][i]);
                     }
+                    // Check if the endpoint has change
                     if (json["endpoint"] != userData.mqttServer){
                         
+                        //Search for closest node
                         userData.nodeTopic = new_Node_Topic();
+                        // Change the mqtt end point by disconnection the current one and connecting it to the new one
                         std::cout << "\nSwitching MQTT Server to : " <<json["endpoint"]<<std::endl;
                         int ret = switch_mqtt_server(json["endpoint"]);
                         if(ret != ssnppl_error::SUCCESS){
                             std::cout << "Failed to switch MQTT Server" <<std::endl;
-                        }else{
-                        }
+                        }                        
                     }else{
                         process_new_position();
                     }
@@ -381,17 +386,17 @@ void Ssnppl_demonstrator::handle_data()
             ephemeris_gga_queue.pop();
             
             // parse msg to found lat and lon 
-            if (userData.localized && userData.corrections_mode != "Lb"){
-
+            if (userData.localized &&( options.mode == "Dual" || options.mode == "Ip") ){
                  std::vector<std::string> parsedGGA = split(std::string(msg.begin(),msg.end()),',');
-            if(parsedGGA.at(0) == "$GPGGA" )
+                if(parsedGGA.at(0) == "$GPGGA" )
             {
                 float new_latitude = NMEAToDecimal(parsedGGA.at(2), parsedGGA.at(3));
                 float new_longitude = NMEAToDecimal(parsedGGA.at(4),parsedGGA.at(5));
                 if( abs(latitude - new_latitude) > latitude_threshold || abs(longitude - new_longitude) > longitude_threshold){
-                    std::cout<<"New position "<<std::endl;
+                    std::cout<<"New position  : lat : " << new_latitude << " / lon : "<< new_longitude <<std::endl;
                      latitude = new_latitude ;
                      longitude = new_longitude;
+                     latitude_threshold = latitude;
                      longitude_threshold = latitude_threshold * cos(radians(new_latitude));
                      process_new_position();
                  }
@@ -723,10 +728,12 @@ Ssnppl_demonstrator::~Ssnppl_demonstrator()
 
 void Ssnppl_demonstrator::process_new_position () noexcept
 {
-    // check if need to change Tile topic
+    // Search for current tile 
     std::string new_tile_topic = new_Tile_Topic();
     if (new_tile_topic != userData.tileTopic)
-    {   if (userData.tileTopic != ""){
+    {   //Current tile changed 
+        // Unsubscribe from current tile topic 
+        if (userData.tileTopic != ""){
             int result = mosquitto_unsubscribe(mosq_client,NULL,userData.tileTopic.c_str());
             if (result != MOSQ_ERR_SUCCESS) {
                     std::cerr << "\nError unsubscribing to " << userData.tileTopic.c_str() << " topic.\n" << std::endl;
@@ -735,6 +742,7 @@ void Ssnppl_demonstrator::process_new_position () noexcept
                     std::cout << "unsubscribed from topic: " << userData.tileTopic.c_str() << std::endl;
                 }
         }
+        // Subscribe to new tile topic
         userData.tileTopic = new_tile_topic;
         int result = mosquitto_subscribe(mosq_client,NULL,userData.tileTopic.c_str(),userData.tileQoS) ;
         if (result != MOSQ_ERR_SUCCESS) {
@@ -752,9 +760,12 @@ void Ssnppl_demonstrator::process_new_position () noexcept
 
 void Ssnppl_demonstrator::process_new_node() noexcept 
 {
+    // Search for closest node 
     std::string new_node_topic = new_Node_Topic();
     if (new_node_topic != this->userData.nodeTopic)
-    { 
+    {
+        //New node topic found
+        // Unsubscribe from current node topic 
         if (this->userData.nodeTopic !=""){
             int result = mosquitto_unsubscribe(mosq_client,NULL,userData.nodeTopic.c_str());
             if (result != MOSQ_ERR_SUCCESS) {
@@ -764,6 +775,7 @@ void Ssnppl_demonstrator::process_new_node() noexcept
                 std::cout << "unsubscribed from topic: " << userData.nodeTopic.c_str() << std::endl;
             }
         }
+        // Subscribe to new node topic
         userData.nodeTopic = new_node_topic;
         int result = mosquitto_subscribe(mosq_client,NULL,userData.nodeTopic.c_str(),userData.nodeQoS) ;
         if (result != MOSQ_ERR_SUCCESS) {
@@ -796,7 +808,7 @@ std::string Ssnppl_demonstrator::new_Node_Topic() noexcept
         if (node_ew == 'W'){
             node_lon = -node_lon;
         }
-        dist = distance_between_locations(latitude,longitude,node_lat,node_lon);
+        dist = distanceBetweenLocations(latitude,longitude,node_lat,node_lon);
 
         if (dist < min_dist_scaled) {
             min_dist_scaled = dist;
@@ -808,21 +820,21 @@ std::string Ssnppl_demonstrator::new_Node_Topic() noexcept
 }
 std::string Ssnppl_demonstrator::new_Tile_Topic () noexcept
 {
-    char latitudeDirection = (latitude < 0) ? 'S' : 'N' ;
-    char longitudeDirection = (longitude < 0) ? 'W' : 'E' ;
+    char latitude_direction = (latitude < 0) ? 'S' : 'N' ;
+    char longitude_direction = (longitude < 0) ? 'W' : 'E' ;
     float scale =(float)  (1000 >> (tile_level & 3)) / 100.0;
     
     float tileLat  = (floor(latitude / scale) * scale) + (scale/2);
     float tileLon  = (floor(longitude / scale) * scale) + (scale/2);
 
-    int finaltileLat = abs(round(tileLat * 100));
-    int finaltileLon = abs(round(tileLon * 100));
+    int final_tile_Lat = abs(round(tileLat * 100));
+    int final_tile_Lon = abs(round(tileLon * 100));
 
     std::ostringstream result ;
-    result << "pp/ip/L" << tile_level << latitudeDirection ;
-    result << std::setw(4) << std::setfill('0') << finaltileLat;
-    result << longitudeDirection;
-    result << std::setw(5) << std::setfill('0') << finaltileLon ;
+    result << "pp/ip/L" << tile_level << latitude_direction ;
+    result << std::setw(4) << std::setfill('0') << final_tile_Lat;
+    result << longitude_direction;
+    result << std::setw(5) << std::setfill('0') << final_tile_Lon ;
     result << "/dict";
     return result.str(); 
 }
