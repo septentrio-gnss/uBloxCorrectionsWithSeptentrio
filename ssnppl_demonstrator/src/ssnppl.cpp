@@ -33,6 +33,7 @@
 #include "utils.hpp"
 #include <nlohmann/json.hpp>
 #include <mosquitto.h>
+#include <cmath>
 #include <PPL_PublicInterface.h>
 #include "mqtt.hpp"
 
@@ -52,18 +53,18 @@ ssnppl_error Ssnppl_demonstrator::init(int argc, char *argv[])
     {
         return ssnppl_error::FAIL;
     }
-
     if (init_ppl() != ssnppl_error::SUCCESS)
     {
         return ssnppl_error::FAIL;
     }
-    init_SPARTN_LOG();
-    init_receiver();
-
+   init_SPARTN_LOG();
     if (init_mqtt() != ssnppl_error::SUCCESS)
     {
         return ssnppl_error::FAIL;
     }
+   init_receiver();
+
+   
 
     return ssnppl_error::SUCCESS;
 }
@@ -178,6 +179,8 @@ ssnppl_error Ssnppl_demonstrator::init_mqtt()
     userData.corrections_mode = options.mode;
     userData.region = options.region;
     userData.cv_incoming_data = &cv_incoming_data;
+    // Set Localized distribution 
+    userData.localized = options.localized ;
 
     // Setting the callbacks for the MQTT Client
     mosquitto_message_callback_set(mosq_client, mqtt_on_message);
@@ -203,16 +206,56 @@ ssnppl_error Ssnppl_demonstrator::init_mqtt()
         std::cerr << "Failed to start main loop of Mosquitto client: " << ret << std::endl;
         return ssnppl_error::MQTT_ERROR;
     }
+    userData.mqttServer = options.mqtt_server;
+    return ssnppl_error::SUCCESS;
+}
+ssnppl_error Ssnppl_demonstrator::switch_mqtt_server(std::string new_mqtt_server){
+
+    std::cout<<"\nStop main loop of Mosquitto client" <<std::endl  ;
+     int ret = mosquitto_loop_stop(mosq_client,true);
+    if (ret != MOSQ_ERR_SUCCESS)
+    {
+        std::cerr << "Failed to stop main loop of Mosquitto client: " << ret << std::endl;
+        return ssnppl_error::MQTT_ERROR;
+    }
+    std::cout<< " \nDisconnected from old MQTT broker : " << userData.mqttServer <<std::endl;
+    ret = mosquitto_disconnect(mosq_client);
+    if (ret != MOSQ_ERR_SUCCESS)
+    {
+        std::cerr << "Failed to disconnect to MQTT broker: " << mosquitto_strerror(ret) << std::endl;
+        return ssnppl_error::MQTT_ERROR;
+    }
+    sleep(2);
+    const int mqtt_keepalive = 10;
+    const int mqtt_port = 8883;
+
+    std::cout << "\nConnect to new MQTT broker : " << new_mqtt_server  << std::endl ;
+     ret = mosquitto_connect(mosq_client, new_mqtt_server.c_str(), mqtt_port, mqtt_keepalive);
+    if (ret != MOSQ_ERR_SUCCESS)
+    {
+        std::cerr << "Failed to connect to MQTT broker: " << mosquitto_strerror(ret) << std::endl;
+        return ssnppl_error::MQTT_ERROR;
+    }
+
+    /* Starting the client loop                                                               *
+     *   Start the main loop of the Mosquitto client. This will cause the client to connect    *
+     *   to the broker and listen for messages on the subscribed topics.                       */
+    ret = mosquitto_loop_start(mosq_client);
+    if (ret != MOSQ_ERR_SUCCESS)
+    {
+        std::cerr << "Failed to start main loop of Mosquitto client: " << ret << std::endl;
+        return ssnppl_error::MQTT_ERROR;
+    }
+    userData.mqttServer = new_mqtt_server;
 
     return ssnppl_error::SUCCESS;
 }
-
 void Ssnppl_demonstrator::handle_data()
 {
     std::unique_lock<std::mutex> mutex{lk_incoming_data};
     // Wait for signal of new data (MQTT or LBAND or GGA/EPH)
     cv_incoming_data.wait(lk_incoming_data);
-
+  
     // Handle MQTT
     {
         std::lock_guard<std::mutex> lock(userData.message_queue_mutex);
@@ -269,9 +312,8 @@ void Ssnppl_demonstrator::handle_data()
                     std::cout << std::endl;
                 }
             }
-            else if (message.topic == userData.corrTopic)
+            else if (message.topic == userData.corrTopic || message.topic == userData.nodeTopic)
             {
-
                 std::vector<uint8_t> mqtt_data = std::vector<uint8_t>(message.payload.begin(), message.payload.end());
                 std::array<uint8_t, PPL_MAX_RTCM_BUFFER> rtcm_buffer;
                 uint32_t rtcm_size;
@@ -281,7 +323,7 @@ void Ssnppl_demonstrator::handle_data()
                 ePPL_ReturnStatus ePPLRet = PPL_SendSpartn(mqtt_data.data(), mqtt_data.size());
                 if ((ePPLRet) == ePPL_Success)
                 {
-                    PPL_GetRTCMOutput(rtcm_buffer.data(), PPL_MAX_RTCM_BUFFER, &rtcm_size);
+                    ePPL_ReturnStatus ePPLRet = PPL_GetRTCMOutput(rtcm_buffer.data(), PPL_MAX_RTCM_BUFFER, &rtcm_size);
                     if (rtcm_size>0)
                     {
                         std::unique_lock<std::mutex> lock(rtcm_queue_mutex);
@@ -289,11 +331,39 @@ void Ssnppl_demonstrator::handle_data()
                         lock.unlock();
                         cv_rtcm.notify_one();
                     }
+
                 }
                 else
                 {
                     std::cout << "FAILED TO SEND IP DATA:  " << ePPLRet << std::endl;
                 }
+            }
+            else if (message.topic == userData.tileTopic)
+            {
+                    // Parse Payload to get all the node available in the tile
+                    nlohmann::json json = nlohmann::json::parse(message.payload);
+                    this->nodeprefix = json["nodeprefix"];
+
+                    // Replace the previous node with new ones
+                    this->tile_dict.clear();
+                    for(int i = 0 ; i < json["nodes"].size();i++){
+                        this->tile_dict.push_back(json["nodes"][i]);
+                    }
+                    // Check if the endpoint has change
+                    if (json["endpoint"] != userData.mqttServer){
+                        
+                        //Search for closest node
+                        userData.nodeTopic = new_Node_Topic();
+                        // Change the mqtt end point by disconnection the current one and connecting it to the new one
+                        std::cout << "\nSwitching MQTT Server to : " <<json["endpoint"]<<std::endl;
+                        int ret = switch_mqtt_server(json["endpoint"]);
+                        if(ret != ssnppl_error::SUCCESS){
+                            std::cout << "Failed to switch MQTT Server" <<std::endl;
+                        }                        
+                    }else{
+                        process_new_position();
+                    }
+
             }
         }
     }
@@ -314,6 +384,24 @@ void Ssnppl_demonstrator::handle_data()
                 std::cout << "Ephemeris Received. Size:" << msg.size() << std::endl;
             }
             ephemeris_gga_queue.pop();
+            
+            // parse msg to found lat and lon 
+            if (userData.localized &&( options.mode == "Dual" || options.mode == "Ip") ){
+                 std::vector<std::string> parsedGGA = split(std::string(msg.begin(),msg.end()),',');
+                if(parsedGGA.at(0) == "$GPGGA" )
+            {
+                float new_latitude = NMEAToDecimal(parsedGGA.at(2), parsedGGA.at(3));
+                float new_longitude = NMEAToDecimal(parsedGGA.at(4),parsedGGA.at(5));
+                if( abs(latitude - new_latitude) > latitude_threshold || abs(longitude - new_longitude) > longitude_threshold){
+                    std::cout<<"New position  : lat : " << new_latitude << " / lon : "<< new_longitude <<std::endl;
+                     latitude = new_latitude ;
+                     longitude = new_longitude;
+                     latitude_threshold = latitude;
+                     longitude_threshold = latitude_threshold * cos(radians(new_latitude));
+                     process_new_position();
+                 }
+            }
+            }
         }
     }
 
@@ -372,6 +460,20 @@ ssnppl_error Ssnppl_demonstrator::init_ppl()
     {
         ePPLRet = PPL_Initialize(PPL_CFG_ENABLE_IP_CHANNEL | PPL_CFG_ENABLE_AUX_CHANNEL);
     }
+
+    // Tile level for Localized distribution
+        if (options.tile_level >= 2 )
+        {
+            this->tile_level = 2;
+        }
+        else if (options.tile_level <= 0)
+        {
+            this->tile_level = 0;
+        }
+        else
+        {
+            this->tile_level = options.tile_level;
+        }
 
     if (ePPLRet != ePPL_Success)
     {
@@ -455,6 +557,7 @@ void Ssnppl_demonstrator::init_receiver()
             main_channel.sync_write(cmds[i]);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
+
     }
 
     read_ephemeris_gga_data_thread = std::thread(&Ssnppl_demonstrator::read_ephemeris_gga_data, this);
@@ -617,4 +720,121 @@ Ssnppl_demonstrator::~Ssnppl_demonstrator()
     read_ephemeris_gga_data_thread.join();
     read_lband_data_thread.join();
     write_rtcm_thread.join();
+}
+
+
+// Localized Distribution Functions
+
+
+void Ssnppl_demonstrator::process_new_position () noexcept
+{
+    // Search for current tile 
+    std::string new_tile_topic = new_Tile_Topic();
+    if (new_tile_topic != userData.tileTopic)
+    {   //Current tile changed 
+        // Unsubscribe from current tile topic 
+        if (userData.tileTopic != ""){
+            int result = mosquitto_unsubscribe(mosq_client,NULL,userData.tileTopic.c_str());
+            if (result != MOSQ_ERR_SUCCESS) {
+                    std::cerr << "\nError unsubscribing to " << userData.tileTopic.c_str() << " topic.\n" << std::endl;
+
+                } else { 
+                    std::cout << "unsubscribed from topic: " << userData.tileTopic.c_str() << std::endl;
+                }
+        }
+        // Subscribe to new tile topic
+        userData.tileTopic = new_tile_topic;
+        int result = mosquitto_subscribe(mosq_client,NULL,userData.tileTopic.c_str(),userData.tileQoS) ;
+        if (result != MOSQ_ERR_SUCCESS) {
+                std::cerr << "\nError subscribing to " << userData.tileTopic.c_str() << " topic.\n" << std::endl;
+
+            } else { 
+                std::cout << "Subscribed to topic: " << userData.tileTopic.c_str() << std::endl;
+            }
+    }else {
+        // Check if need to change Node topic
+        process_new_node();
+    }
+    
+}
+
+void Ssnppl_demonstrator::process_new_node() noexcept 
+{
+    // Search for closest node 
+    std::string new_node_topic = new_Node_Topic();
+    if (new_node_topic != this->userData.nodeTopic)
+    {
+        //New node topic found
+        // Unsubscribe from current node topic 
+        if (this->userData.nodeTopic !=""){
+            int result = mosquitto_unsubscribe(mosq_client,NULL,userData.nodeTopic.c_str());
+            if (result != MOSQ_ERR_SUCCESS) {
+                std::cerr << "\nError unsubscribing to " << userData.nodeTopic.c_str() << " topic.\n" << std::endl;
+
+            } else { 
+                std::cout << "unsubscribed from topic: " << userData.nodeTopic.c_str() << std::endl;
+            }
+        }
+        // Subscribe to new node topic
+        userData.nodeTopic = new_node_topic;
+        int result = mosquitto_subscribe(mosq_client,NULL,userData.nodeTopic.c_str(),userData.nodeQoS) ;
+        if (result != MOSQ_ERR_SUCCESS) {
+                std::cerr << "\nError subscribing to " << userData.nodeTopic.c_str() << " topic.\n" << std::endl;
+
+            } else { 
+                std::cout << "Subscribed to topic: " << userData.nodeTopic.c_str() << std::endl;
+            }
+    }
+}
+
+std::string Ssnppl_demonstrator::new_Node_Topic() noexcept
+{
+    
+    float min_dist_scaled = std::numeric_limits<float>::max();
+    float node_lat , node_lon ;
+    char node_ns , node_ew ;
+    float dist ;
+    std::string result ;
+    for( int i = 0 ; i < tile_dict.size() ; i++){
+        // Get the node information
+        node_ns = tile_dict.at(i).at(0);
+        node_lat = stof(tile_dict.at(i).substr(1,4))/100;
+        node_ew = tile_dict.at(i).at(5);
+        node_lon = stof(tile_dict.at(i).substr(6,11)) /100;
+
+        if (node_ns == 'S'){
+            node_lat = -node_lat;
+        }
+        if (node_ew == 'W'){
+            node_lon = -node_lon;
+        }
+        dist = distanceBetweenLocations(latitude,longitude,node_lat,node_lon);
+
+        if (dist < min_dist_scaled) {
+            min_dist_scaled = dist;
+            result = tile_dict.at(i);
+        }
+    }
+    return this->nodeprefix + result;
+    
+}
+std::string Ssnppl_demonstrator::new_Tile_Topic () noexcept
+{
+    char latitude_direction = (latitude < 0) ? 'S' : 'N' ;
+    char longitude_direction = (longitude < 0) ? 'W' : 'E' ;
+    float scale =(float)  (1000 >> (tile_level & 3)) / 100.0;
+    
+    float tileLat  = (floor(latitude / scale) * scale) + (scale/2);
+    float tileLon  = (floor(longitude / scale) * scale) + (scale/2);
+
+    int final_tile_Lat = abs(round(tileLat * 100));
+    int final_tile_Lon = abs(round(tileLon * 100));
+
+    std::ostringstream result ;
+    result << "pp/ip/L" << tile_level << latitude_direction ;
+    result << std::setw(4) << std::setfill('0') << final_tile_Lat;
+    result << longitude_direction;
+    result << std::setw(5) << std::setfill('0') << final_tile_Lon ;
+    result << "/dict";
+    return result.str(); 
 }

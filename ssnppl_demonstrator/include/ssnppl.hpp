@@ -52,6 +52,7 @@ enum ssnppl_error
 
 class Ssnppl_demonstrator
 {
+    
 private:
     // State struct
     ProgramOptions options;
@@ -104,12 +105,28 @@ private:
     struct mosquitto *mosq_client = nullptr;
     UserData userData;
     ssnppl_error init_mqtt();
+    ssnppl_error switch_mqtt_server(std::string new_mqtt_server);
 
     // SPARTN LOG
     std::ofstream SPARTN_file_Ip;
     std::ofstream SPARTN_file_Lb;
     void init_SPARTN_LOG();
 
+    // Localized Service
+    std::vector<std::string> tile_dict;
+    int tile_level{2};
+    float latitude_threshold{0}; 
+    float longitude_threshold{0};
+    float latitude{0};
+    float longitude{0};
+    std::string nodeprefix ; 
+
+    void process_new_position () noexcept;
+    void process_new_node() noexcept ;
+    std::string new_Node_Topic () noexcept;
+    std::string new_Tile_Topic () noexcept;
+
+    
 public:
     // Default Ctor and Dtor
     Ssnppl_demonstrator() = default;
@@ -121,3 +138,8 @@ public:
 };
 
 #endif
+
+/*
+ - add function to found new tile topic
+ - add function to found new node topic
+*/

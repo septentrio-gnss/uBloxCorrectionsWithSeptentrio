@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <cstring>
 #include <sstream>
+#include "utils.hpp"
 
 void echo(const std::string &msg, bool echo_mode)
 {
@@ -96,5 +97,43 @@ std::vector<int> identifyRTCM3MessageIDs(const uint8_t *buffer, size_t bufferSiz
     index += length + 6;
   }
   return res;
+}
+
+float distanceBetweenLocations( float lat1 ,  float lon1 , float lat2 ,  float lon2)
+{
+    lat1 = radians(lat1);
+    lon1 = radians(lon1);
+    lat2 = radians(lat2);
+    lon2 = radians(lon2);
+
+    float dlon = lon2 - lon1;
+    float dlat = lat2 - lat1;
+    float result = pow(sin(dlat / 2), 2) + 
+                          cos(lat1) * cos(lat2) * 
+                          pow(sin(dlon / 2), 2);
+ 
+    result = 2 * asin(sqrt(result));
+
+    result = result * EARTHRADIUS;
+
+    return result;
+}
+
+float NMEAToDecimal(const std::string& Coord , const std::string& Direction) noexcept
+{
+  float degree , minute ; 
+  if (Direction =="E" || Direction =="W"){
+    degree = std::stof(Coord.substr(0,3));
+    minute = std::stof(Coord.substr(3));
+  }else
+  {
+    degree = std::stof(Coord.substr(0,2));
+    minute = std::stof(Coord.substr(2));
+  }
+    float decimal = degree + minute / 60.0 ;
+    if (Direction =="S" || Direction == "W"){
+        decimal = -decimal ;
+    }
+    return decimal ;
 }
 

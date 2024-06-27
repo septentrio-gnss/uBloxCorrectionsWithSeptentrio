@@ -60,7 +60,7 @@ We would like you to mention our disclaimer about that setup and the guides in g
 
 ## INTRODUCTION
 
-This documentation is a user implementation guide for integrating PointPerfect correction services into an example system setup based on Mosaic-Go + Raspberry Pi 4. The guide to set up this setup is documented in the link below. It is a sample guide so that you can implement your own based on this system or other similar systems should you wish to do so. On Septentrio's side, only tests have been done with this setup.
+This documentation serves as a user implementation guide for integrating PointPerfect correction services into an example system setup based on Mosaic-Go + Raspberry Pi 4. The guide for setting up this configuration is documented in the link below. It serves as a sample guide for implementing your own setup based on this system or other similar systems if desired. Please note that tests have only been conducted with this setup on Septentrio's side.
 
 <div align="center">
 
@@ -159,7 +159,7 @@ To download the code, simply clone this repository, since the cluecode is locate
 ```
 git clone https://github.com/septentrio-gnss/uBloxCorrectionsWithSeptentrio.git
 ```  
-For obtaining the PointPerfect library please consult uBlox. Then put it in the PPL folder inside include directory and make sure that the path to it is correct.
+For the library, the files used for compilation for Raspberry 32-bit and 64-bit platforms are available in the 'raspberry-build' directory. To obtain the library in its complete version or for further information about it, please contact uBlox. After obtaining the library, put it in the PPL folder inside include directory and make sure that the path to it is correct.
 
 ## LIST OF PARAMETERS
 

@@ -87,6 +87,12 @@ struct ProgramOptions {
 
     // Auth folder
     std::string mqtt_auth_folder;
+
+    // Localized Distribution Configuration 
+    bool localized ;
+    int tile_level ; 
+    int distance ;
+
 };
 
 ProgramOptions ParseProgramOptions(int argc, char* argv[]);
