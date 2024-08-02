@@ -209,6 +209,7 @@ ssnppl_error Ssnppl_demonstrator::init_mqtt()
     userData.mqttServer = options.mqtt_server;
     return ssnppl_error::SUCCESS;
 }
+
 ssnppl_error Ssnppl_demonstrator::switch_mqtt_server(std::string new_mqtt_server){
 
     std::cout<<"\nStop main loop of Mosquitto client" <<std::endl  ;
@@ -250,6 +251,7 @@ ssnppl_error Ssnppl_demonstrator::switch_mqtt_server(std::string new_mqtt_server
 
     return ssnppl_error::SUCCESS;
 }
+
 void Ssnppl_demonstrator::handle_data()
 {
     std::unique_lock<std::mutex> mutex{lk_incoming_data};
@@ -390,6 +392,12 @@ void Ssnppl_demonstrator::handle_data()
                  std::vector<std::string> parsedGGA = split(std::string(msg.begin(),msg.end()),',');
                 if(parsedGGA.at(0) == "$GPGGA" )
             {
+
+                //****** Check if the GPGGA is not empty (no PVT) ********
+                if (parsedGGA.at(3) == ""){
+                    return;
+                }
+
                 float new_latitude = NMEAToDecimal(parsedGGA.at(2), parsedGGA.at(3));
                 float new_longitude = NMEAToDecimal(parsedGGA.at(4),parsedGGA.at(5));
                 if( abs(latitude - new_latitude) > latitude_threshold || abs(longitude - new_longitude) > longitude_threshold){
